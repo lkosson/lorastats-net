@@ -1,5 +1,7 @@
 /.vs
 /bin
 /obj
-Properties/launchSettings.json
+/data
 *.user
+Properties/launchSettings.json
+GeneratedVersion.cs
