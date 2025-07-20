@@ -1,0 +1,154 @@
+﻿body
+{
+	color: #262626;
+	font-family: Calibri, sans-serif;
+	font-size: 1.1em;
+	margin: 0;
+}
+
+header > nav
+{
+	padding: 0.5em 1em;
+}
+
+article
+{
+	margin: 1em 1em;
+}
+
+header
+{
+	background-color: #b8ffc2;
+}
+
+header > nav > a
+{
+	margin-right: 0.7em;
+}
+
+a
+{
+	text-decoration: none;
+	color: #2145a8;
+}
+
+em
+{
+	font-variant: small-caps;
+	font-style: normal;
+}
+
+table
+{
+	border-collapse: collapse;
+	margin-bottom: 1em;
+}
+
+table > caption
+{
+	text-align: left;
+	font-weight: bold;
+	font-size: 1.3em;
+	white-space: nowrap;
+}
+
+table > thead > tr > th,
+table > tbody > tr > th
+{
+	vertical-align: top;
+	text-align: left;
+	font-weight: normal;
+	background-color: #efefef;
+}
+
+table td,
+table th
+{
+	border: 1px solid #222;
+	padding: 0.1em 0.3em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.num
+{
+	text-align: right;
+}
+
+.pre
+{
+	font-family: Consolas, monospace;
+	white-space: pre;
+}
+
+.node > span
+{
+	display: inline-block;
+	border: 1px solid #000;
+	min-width: 3em;
+	text-align: center;
+	border-radius: 0.2em;
+}
+
+*[title]
+{
+	cursor: help;
+}
+
+#map
+{
+	height: 90vh;
+}
+
+#minimap
+{
+	height: 40em;
+	width: 40em;
+}
+
+.hops
+{
+	margin: 0;
+	margin-right: 0.3em;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.hops > tbody > tr
+{
+	height: 1em;
+}
+
+.hops > tbody > tr > td
+{
+	padding: 0;
+	color: #ffffff80;
+	font-variant: small-caps;
+	font-size: 0.9em;
+}
+
+.hops > tbody > tr > td > div
+{
+	width: 0.5em;
+	display: inline-block;
+}
+
+.pct
+{
+	margin-left: auto;
+	text-align: right;
+	text-shadow: -1px -1px 0px #000, -1px 1px 0px #000, 1px -1px 0px #000, 1px 1px 0px #000;
+	color: #fff;
+	font-size: 0.9em;
+	padding: 0.1em 0.3em;
+	min-width: min-content;
+}
+
+.map-node
+{
+	background: #89d;
+	border: 1px solid #666;
+	border-radius: 50%;
+	opacity: 50%;
+}
