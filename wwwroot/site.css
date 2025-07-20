@@ -19,11 +19,33 @@ article
 header
 {
 	background-color: #b8ffc2;
+	border-bottom: 1px solid #90cb98;
 }
 
 header > nav > a
 {
 	margin-right: 0.7em;
+}
+
+footer
+{
+	position: fixed;
+	bottom: 0px;
+	right: 0.4em;
+	font-size: 0.8em;
+	color: #888;
+	transition: 0.2s linear;
+}
+
+footer:hover
+{
+	color: #000;
+}
+
+footer em
+{
+	color: #888;
+	font-size: 0.8em;
 }
 
 a

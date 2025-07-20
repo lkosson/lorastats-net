@@ -1,0 +1,32 @@
+﻿@model IPageWithTitle
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>lorastats.net - @Model.Title</title>
+	<meta property="og:title" content="LoraStats" />
+	<meta property="og:type" content="website" />
+	<meta property="og:locale" content="pl_PL" />
+	<meta property="og:url" content="https://lorastats.net/" />
+	<meta property="og:image" content="https://lorastats.net/logo.png" />
+	<meta property="og:description" content="Meshtastic Network dashboard and statistics" />
+	<link rel="stylesheet" href="~/site.css" asp-append-version="true" />
+</head>
+<body>
+	<header>
+		<nav>
+			<a asp-page="Index">Info</a>
+		</nav>
+	</header>
+	<article>
+		@RenderBody()
+	</article>
+	<footer>
+		contact <em>at</em> lorastats <em>dot</em> net
+		|
+		@GeneratedVersion.VALUE
+	</footer>
+	<script src="~/site.js"></script>
+</body>
+</html>

@@ -6,10 +6,6 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Folder Include="wwwroot\" />
-	</ItemGroup>
-
 	<Target Name="GenerateVersionCs" BeforeTargets="BeforeBuild;BeforeRebuild">
 		<Exec Command="scripts\generateversion.bat">
 			<Output ItemName="GeneratedVersion.cs" TaskParameter="Outputs" />
