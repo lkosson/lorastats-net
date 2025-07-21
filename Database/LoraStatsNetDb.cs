@@ -65,9 +65,9 @@ class LoraStatsNetDb : DbContext
 		var set = Set<TEntity>();
 		foreach (var entity in entities)
 		{
-			if (entity.Id <= 0)
+			if (entity.Ref.Id <= 0)
 			{
-				entity.Id = 0;
+				entity.Ref = default;
 				set.Add(entity);
 			}
 			else
@@ -103,7 +103,7 @@ class LoraStatsNetDb : DbContext
 
 	public async Task<TEntity?> GetAsync<TEntity>(EntityRef<TEntity> entityRef)
 		where TEntity : Entity<TEntity>
-		=> await Set<TEntity>().FirstOrDefaultAsync(r => r.Id == entityRef.Id);
+		=> entityRef.IsNull ? null : await Set<TEntity>().FirstOrDefaultAsync(r => r.Ref == entityRef);
 
 	public async Task<IEnumerable<Dictionary<string, object>>> QueryAsync(FormattableString query)
 	{

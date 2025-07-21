@@ -5,9 +5,9 @@ namespace LoraStatsNet.Database.Entities;
 
 class Node : Entity<Node>
 {
-	public static readonly Node BROADCAST = new Node { Id = 0, NodeId = 0xffffffff, ShortName = "****", LongName = "BROADCAST" };
+	public static readonly Node BROADCAST = new Node { Ref = 0, NodeId = 0xffffffff, ShortName = "****", LongName = "BROADCAST" };
 
-	public long? CommunityId { get; set; }
+	public EntityRef<Community> CommunityId { get; set; }
 	public uint NodeId { get; set; }
 	public string? ShortName { get; set; }
 	public string? LongName { get; set; }
@@ -21,8 +21,6 @@ class Node : Entity<Node>
 	public DateTime? LastPositionUpdate { get; set; }
 	public DateTime? LastBoot { get; set; }
 	public string? PublicKey { get; set; }
-
-	public EntityRef<Community> CommunityRef { get => CommunityId; set => CommunityId = value; }
 
 	public Community Community { get; set; } = default!;
 	public List<Packet> SentPackets { get; set; } = default!;

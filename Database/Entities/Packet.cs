@@ -5,8 +5,8 @@ namespace LoraStatsNet.Database.Entities;
 class Packet : Entity<Packet>
 {
 	public uint PacketId { get; set; }
-	public long FromNodeId { get; set; }
-	public long? ToNodeId { get; set; }
+	public EntityRef<Node> FromNodeId { get; set; }
+	public EntityRef<Node> ToNodeId { get; set; }
 	public DateTime FirstSeen { get; set; }
 	public byte HopStart { get; set; }
 	public bool WantAck { get; set; }
@@ -16,9 +16,6 @@ class Packet : Entity<Packet>
 	public string? ParsedPayload { get; set; }
 	public byte Channel { get; set; }
 	public uint RequestId { get; set; }
-
-	public EntityRef<Node> FromNodeRef { get => FromNodeId; set => FromNodeId = value; }
-	public EntityRef<Node> ToNodeRef { get => ToNodeId; set => ToNodeId = value; }
 
 	public Node FromNode { get; set; } = default!;
 	public Node ToNode { get; set; } = default!;

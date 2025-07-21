@@ -9,12 +9,11 @@ static class PacketDataBuilder
 	public static void Configure(EntityTypeBuilder<PacketData> builder)
 	{
 		builder.ToTable(nameof(PacketData));
-		builder.HasKey(e => e.Id);
+		builder.HasKey(e => e.Ref);
 
-		builder.Property(e => e.Id).ValueGeneratedOnAdd().IsRequired();
-		builder.Property(e => e.PacketReportId).IsRequired();
+		builder.Property(e => e.Ref).HasColumnName("Id").ValueGeneratedOnAdd().HasConversion<EntityRefValueConverter<PacketData>>().IsRequired();
+		builder.Property(e => e.PacketReportId).HasConversion<EntityRefValueConverter<PacketReport>>().IsRequired();
 		builder.Property(e => e.RawData).IsRequired();
 
-		builder.Ignore(e => e.PacketReportRef);
 	}
 }
