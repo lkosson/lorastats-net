@@ -32,9 +32,9 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				node.LastSeen = DateTime.Now;
 				changed = true;
 			}
-			if (gatewayNode.HasValidLocation && !node.HasValidLocation && node.CommunityRef != gatewayNode.CommunityRef)
+			if (gatewayNode.HasValidLocation && !node.HasValidLocation && node.CommunityId != gatewayNode.CommunityId)
 			{
-				node.CommunityRef = gatewayNode.CommunityRef;
+				node.CommunityId = gatewayNode.CommunityId;
 				changed = true;
 			}
 		}
@@ -139,14 +139,14 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 						.ToListAsync();
 					var smallestArea = matchingAreas.OrderBy(communityArea => communityArea.Area.AreaKm).FirstOrDefault();
 					
-					fromNode.CommunityRef = smallestArea?.CommunityRef.Id;
+					fromNode.CommunityId = smallestArea?.CommunityId ?? default;
 					fromNodeDirty = true;
 				}
 
 				if (fromNodeDirty) await db.StoreAsync(fromNode);
 			}
 
-			if (fromNode.CommunityRef.IsNull)
+			if (fromNode.CommunityId.IsNull)
 			{
 				logger.LogDebug("Ignoring packet from node \"{node}\" belonging unknown community.", fromNode);
 				return;
