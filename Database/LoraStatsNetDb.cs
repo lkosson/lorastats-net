@@ -4,6 +4,7 @@ using LoraStatsNet.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace LoraStatsNet.Database;
 
@@ -34,6 +35,7 @@ class LoraStatsNetDb : DbContext
 		optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.SensitiveDataLoggingEnabledWarning));
 		optionsBuilder.LogTo(message => logger.LogDebug("Executing command: {query}", message), [RelationalEventId.CommandExecuting]);
 		optionsBuilder.EnableSensitiveDataLogging();
+		optionsBuilder.ReplaceService<IRelationalAnnotationProvider, FixedSqliteAnnotationProvider>();
 	}
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
