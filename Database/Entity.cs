@@ -14,8 +14,8 @@ class Entity<T> : Entity, IConvertible
 
 	public override bool Equals(object? otherObj) => otherObj is Entity<T> other && other == this;
 	public override int GetHashCode() => Id.GetHashCode();
-	public static bool operator ==(Entity<T> entity1, Entity<T> entity2) => entity1 is null ? entity2 is null : entity2 is not null && entity1.Id == entity2.Id;
-	public static bool operator !=(Entity<T> entity1, Entity<T> entity2) => !(entity1 == entity2);
+	public static bool operator ==(Entity<T>? entity1, Entity<T>? entity2) => entity1 is null ? entity2 is null : entity2 is not null && entity1.Id == entity2.Id;
+	public static bool operator !=(Entity<T>? entity1, Entity<T>? entity2) => !(entity1 == entity2);
 
 	public TypeCode GetTypeCode() => TypeCode.Object;
 	public bool ToBoolean(IFormatProvider? provider) => throw new NotSupportedException();

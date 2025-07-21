@@ -1,4 +1,5 @@
-﻿using LoraStatsNet.Database.Model;
+﻿using LoraStatsNet.Database.Entities;
+using LoraStatsNet.Database.Model;
 using LoraStatsNet.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,13 @@ class LoraStatsNetDb : DbContext
 	private readonly ILogger<LoraStatsNetDb> logger;
 	private readonly Configuration configuration;
 	private Transaction? currentTransaction;
+
+	public DbSet<CommunityArea> CommunityAreas => Set<CommunityArea>();
+	public DbSet<Community> Communities => Set<Community>();
+	public DbSet<Node> Nodes => Set<Node>();
+	public DbSet<Packet> Packets => Set<Packet>();
+	public DbSet<PacketData> PacketDatas => Set<PacketData>();
+	public DbSet<PacketReport> PacketReports => Set<PacketReport>();
 
 	public LoraStatsNetDb(ILogger<LoraStatsNetDb> logger, Configuration configuration)
 	{

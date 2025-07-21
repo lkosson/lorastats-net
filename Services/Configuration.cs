@@ -17,7 +17,7 @@ class Channels(IConfiguration configuration)
 {
 	public IReadOnlyCollection<Channel> All => configuration.GetChildren().Select(section => GetForSection(section)!).ToList();
 	public Channel? GetByName(string name) => GetForSection(configuration.GetSection(name));
-	public Channel? GetByHash(byte hash) => All.FirstOrDefault(channel => channel.Hash == hash);
+	public IReadOnlyCollection<Channel> GetByHash(byte hash) => All.Where(channel => channel.Hash == hash).ToList();
 	private static Channel? GetForSection(IConfigurationSection configurationSection) => String.IsNullOrEmpty(configurationSection.Key) || String.IsNullOrEmpty(configurationSection.Value) ? null : new Channel(configurationSection.Key, configurationSection.Value);
 }
 
@@ -61,7 +61,7 @@ class MQTT(IConfiguration configuration)
 	public string Server => configuration.GetValue<string>("Server") ?? "";
 	public string? Login => configuration.GetValue<string>("Login");
 	public string? Password => configuration.GetValue<string>("Password");
-	public string? Topic => configuration.GetValue<string>("Topic");
+	public string Topic => configuration.GetValue<string>("Topic") ?? "";
 
 	public override string ToString() => Server;
 }

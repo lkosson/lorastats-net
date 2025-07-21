@@ -4,6 +4,8 @@ namespace LoraStatsNet.Database.Entities;
 
 class Node : Entity<Node>
 {
+	public static readonly Node BROADCAST = new Node { Id = 0, NodeId = 0xffffffff, ShortName = "****", LongName = "BROADCAST" };
+
 	public long? CommunityId { get; set; }
 	public uint NodeId { get; set; }
 	public string? ShortName { get; set; }

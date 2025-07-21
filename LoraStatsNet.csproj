@@ -23,5 +23,6 @@
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
+	  <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
 	</ItemGroup>
 </Project>
