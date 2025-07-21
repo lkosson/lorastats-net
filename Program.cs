@@ -1,13 +1,18 @@
 using System.Globalization;
+using LoraStatsNet.Database;
 using LoraStatsNet.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = new Configuration(builder.Configuration);
 
 builder.Logging.AddSimpleConsole(options => { options.SingleLine = true; options.TimestampFormat = "HH:mm:ss "; });
+builder.Services.AddDbContext<LoraStatsNetDb>();
 builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(configuration.DataDir, "./keys/")));
 builder.Services.AddControllers(options => { options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true; });
 builder.Services.AddSingleton(configuration);
@@ -16,6 +21,10 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+	await scope.ServiceProvider.GetRequiredService<LoraStatsNetDb>().InitializeAsync();
+}
 app.UseStatusCodePages();
 app.UseExceptionHandler("/Error");
 app.UseMiddleware<ExceptionLoggingMiddleware>();

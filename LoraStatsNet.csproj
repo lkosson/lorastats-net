@@ -15,4 +15,12 @@
 			<FileWrites Include="@(Generated)" />
 		</ItemGroup>
 	</Target>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Database\Entities\" />
+	</ItemGroup>
 </Project>
