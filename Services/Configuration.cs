@@ -10,6 +10,7 @@ class Configuration(IConfiguration configuration)
 	public string[] BlockedIPs => configuration.GetSection("BlockedIPs").Get<string[]>() ?? [];
 	public string DbPath => configuration.GetValue<string>("DbPath") ?? Path.Combine(DataDir, "database.sqlite3");
 	public Channels Channels => new Channels(configuration.GetSection("Channels"));
+	public MQTTs MQTTs => new MQTTs(configuration.GetSection("MQTT"));
 }
 
 class Channels(IConfiguration configuration)
@@ -50,3 +51,17 @@ class Channel(string name, string pskString)
 	public override string ToString() => Name;
 }
 
+class MQTTs(IConfiguration configuration)
+{
+	public IReadOnlyCollection<MQTT> All => configuration.GetChildren().Select(section => new MQTT(section)).ToList();
+}
+
+class MQTT(IConfiguration configuration)
+{
+	public string Server => configuration.GetValue<string>("Server") ?? "";
+	public string? Login => configuration.GetValue<string>("Login");
+	public string? Password => configuration.GetValue<string>("Password");
+	public string? Topic => configuration.GetValue<string>("Topic");
+
+	public override string ToString() => Server;
+}
