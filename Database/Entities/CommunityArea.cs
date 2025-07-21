@@ -1,4 +1,6 @@
-﻿namespace LoraStatsNet.Database.Entities;
+﻿using LoraStatsNet.Services;
+
+namespace LoraStatsNet.Database.Entities;
 
 class CommunityArea : Entity<CommunityArea>
 {
@@ -11,4 +13,6 @@ class CommunityArea : Entity<CommunityArea>
 	public EntityRef<Community> CommunityRef { get => CommunityId; set => CommunityId = value; }
 
 	public Community Community { get; set; } = default!;
+
+	public Area Area => new(new(LatitudeMin, LongitudeMin), new(LatitudeMax, LongitudeMax));
 }

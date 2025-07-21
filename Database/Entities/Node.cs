@@ -1,4 +1,5 @@
-﻿using Meshtastic.Protobufs;
+﻿using LoraStatsNet.Services;
+using Meshtastic.Protobufs;
 
 namespace LoraStatsNet.Database.Entities;
 
@@ -32,7 +33,9 @@ class Node : Entity<Node>
 	public string HwModelFmt => HwModel.HasValue ? HwModel.Value.ToString() : "";
 	public string ShortNameOrDefault => ShortName ?? NodeIdFmt[^4..];
 	public string LongNameOrDefault => LongName ?? (NodeId == 0 || NodeId == 0xffffffff ? "" : $"Meshtastic {ShortNameOrDefault}");
-	public bool HasValidLocation => LastLatitude.HasValue && LastLongitude.HasValue && LastPositionUpdate.HasValue && LastPositionUpdate.Value >= DateTime.Now.AddDays(-1);
+	public bool HasValidLocation => LastLatitude.HasValue && LastLongitude.HasValue && LastPositionUpdate.HasValue && HasRecentLocation;
+	public bool HasRecentLocation => LastPositionUpdate.HasValue && LastPositionUpdate.Value >= DateTime.Now.AddDays(-1);
+	public Coordinates? Coordinates => HasValidLocation ? new(LastLatitude!.Value, LastLongitude!.Value) : null;
 
 	public override string ToString() => ShortNameOrDefault;
 }

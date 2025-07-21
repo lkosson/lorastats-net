@@ -112,6 +112,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 			else
 			{
 				var fromNodeDirty = false;
+				var fromNodePositionUpdated = false;
 				var parsedPayload = packet.ParsedPayload ?? "";
 				packet.Port = meshPacket.Decoded.Portnum;
 				packet.WantResponse = meshPacket.Decoded.WantResponse;
@@ -119,7 +120,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				packet.RequestId = meshPacket.Decoded.RequestId;
 
 				if (meshPacket.Decoded.Portnum == PortNum.TelemetryApp) ProcessTelemetry(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
-				else if (meshPacket.Decoded.Portnum == PortNum.PositionApp) ProcessPosition(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
+				else if (meshPacket.Decoded.Portnum == PortNum.PositionApp) ProcessPosition(fromNode, ref fromNodePositionUpdated, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.NodeinfoApp) ProcessNodeInfo(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.TracerouteApp) ProcessTraceroute(fromNode, toNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.NeighborinfoApp) ProcessNeighborInfo(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
@@ -129,7 +130,26 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				else if (meshPacket.Decoded.Portnum == PortNum.RangeTestApp) ProcessRangeTest(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.AdminApp) { }
 				else { }
+
+				if (fromNodePositionUpdated)
+				{
+					var matchingAreas = await db.CommunityAreas
+						.Where(communityArea => communityArea.LatitudeMin <= fromNode.LastLatitude && communityArea.LatitudeMax >= fromNode.LastLatitude
+							&& communityArea.LongitudeMin <= fromNode.LastLongitude && communityArea.LongitudeMax >= fromNode.LastLongitude)
+						.ToListAsync();
+					var smallestArea = matchingAreas.OrderBy(communityArea => communityArea.Area.AreaKm).FirstOrDefault();
+					
+					fromNode.CommunityRef = smallestArea?.CommunityRef.Id;
+					fromNodeDirty = true;
+				}
+
 				if (fromNodeDirty) await db.StoreAsync(fromNode);
+			}
+
+			if (fromNode.CommunityRef.IsNull)
+			{
+				logger.LogDebug("Ignoring packet from node \"{node}\" belonging unknown community.", fromNode);
+				return;
 			}
 
 			await db.StoreAsync(packet);
@@ -209,23 +229,19 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 		if (telemetry.EnvironmentMetrics != null) ProcessEnvironmentMetrics(ref parsedPayload, telemetry.EnvironmentMetrics);
 	}
 
-	private static void ProcessPosition(Node fromNode, ref bool fromNodeDirty, ref string parsedPayload, Data data)
+	private static void ProcessPosition(Node fromNode, ref bool fromNodePositionUpdated, ref string parsedPayload, Data data)
 	{
 		var position = Position.Parser.ParseFrom(data.Payload);
+		if (fromNode.LastPositionPrecision > position.PrecisionBits && fromNode.HasRecentLocation) return;
 		if (position.HasLatitudeI) fromNode.LastLatitude = Math.Round(position.LatitudeI * 1e-7, 7);
 		if (position.HasLongitudeI) fromNode.LastLongitude = Math.Round(position.LongitudeI * 1e-7, 7);
 		if (position.HasAltitude) fromNode.LastElevation = position.Altitude;
 		if (fromNode.LastLatitude.HasValue && fromNode.LastLongitude.HasValue)
 		{
-			if (!fromNode.HasValidLocation || fromNode.LastPositionUpdate < DateTime.Now.AddDays(-1) || fromNode.LastPositionPrecision < position.PrecisionBits)
-			{
-				fromNode.LastPositionUpdate = DateTime.Now;
-				fromNode.LastPositionPrecision = (int)position.PrecisionBits;
-				fromNode.CommunityRef = Communities.Match(fromNode.LastLatitude.Value, fromNode.LastLongitude.Value);
-				fromNodeDirty = true;
-			}
-
-			parsedPayload = fromNode.LastLatitude.LatitudeFmt() + ", " + fromNode.LastLongitude.LongitudeFmt();
+			fromNode.LastPositionUpdate = DateTime.Now;
+			fromNode.LastPositionPrecision = (int)position.PrecisionBits;
+			fromNodePositionUpdated = true;
+			parsedPayload = fromNode.Coordinates.ToString()!;
 		}
 	}
 
