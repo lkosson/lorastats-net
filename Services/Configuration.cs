@@ -1,10 +1,52 @@
-﻿namespace LoraStatsNet.Services;
+﻿using System.Text;
+using Meshtastic;
 
-public class Configuration(IConfiguration configuration)
+namespace LoraStatsNet.Services;
+
+class Configuration(IConfiguration configuration)
 {
 	public IConfiguration ConfigurationSource => configuration;
 	public string DataDir => configuration.GetValue<string>("DataDir") ?? ".";
 	public string[] BlockedIPs => configuration.GetSection("BlockedIPs").Get<string[]>() ?? [];
 	public string DbPath => configuration.GetValue<string>("DbPath") ?? Path.Combine(DataDir, "database.sqlite3");
+	public Channels Channels => new Channels(configuration.GetSection("Channels"));
+}
+
+class Channels(IConfiguration configuration)
+{
+	public IReadOnlyCollection<Channel> All => configuration.GetChildren().Select(section => GetForSection(section)!).ToList();
+	public Channel? GetByName(string name) => GetForSection(configuration.GetSection(name));
+	public Channel? GetByHash(byte hash) => All.FirstOrDefault(channel => channel.Hash == hash);
+	private static Channel? GetForSection(IConfigurationSection configurationSection) => String.IsNullOrEmpty(configurationSection.Key) || String.IsNullOrEmpty(configurationSection.Value) ? null : new Channel(configurationSection.Key, configurationSection.Value);
+}
+
+class Channel(string name, string pskString)
+{
+	public string Name { get; init; } = name;
+	public string PSKString { get; init; } = pskString;
+	public byte[] PSK => GetPSKForKey(PSKString);
+	public byte Hash => ChannelHash(Name, PSK);
+
+	private static byte[] GetPSKForKey(string key)
+	{
+		var byteKey = Convert.FromBase64String(key);
+		if (byteKey.Length != 1) return byteKey;
+		var index = byteKey[0];
+		if (index == 0) return [];
+		var psk = Resources.DEFAULT_PSK.ToArray();
+		psk[psk.Length - 1] += (byte)(index - 1);
+		return psk;
+	}
+
+	private static byte ChannelHash(string channelName, byte[] psk)
+	{
+		var bytes = Encoding.UTF8.GetBytes(channelName);
+		byte hash = 0;
+		for (var i = 0; i < bytes.Length; i++) hash ^= bytes[i];
+		for (var i = 0; i < psk.Length; i++) hash ^= psk[i];
+		return hash;
+	}
+
+	public override string ToString() => Name;
 }
 
