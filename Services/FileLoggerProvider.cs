@@ -4,7 +4,7 @@ using System.Reflection.Emit;
 
 namespace LoraStatsNet.Services;
 
-public class FileLoggerProvider(string fileName, bool logCategory, bool logEventId, int rotate = -1) : ILoggerProvider
+class FileLoggerProvider(string fileName, bool logCategory, bool logEventId, int rotate = -1) : ILoggerProvider
 {
 	private readonly FileWriter writer = new(fileName, logCategory, logEventId, rotate);
 	private readonly ConcurrentDictionary<string, ILogger> loggers = [];
@@ -19,7 +19,7 @@ public class FileLoggerProvider(string fileName, bool logCategory, bool logEvent
 	}
 }
 
-public static class FileLoggerProviderExtensions
+static class FileLoggerProviderExtensions
 {
 	public static void AddFileLoggerProvider(this IServiceCollection services, Configuration configuration)
 	{

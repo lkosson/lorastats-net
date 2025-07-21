@@ -4,7 +4,7 @@ using System.Net.Sockets;
 
 namespace LoraStatsNet.Services;
 
-public class RequestFilteringMiddleware(RequestDelegate next, ILogger<RequestFilteringMiddleware> logger, Configuration configuration)
+class RequestFilteringMiddleware(RequestDelegate next, ILogger<RequestFilteringMiddleware> logger, Configuration configuration)
 {
 	public async Task InvokeAsync(HttpContext context)
 	{

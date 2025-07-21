@@ -1,6 +1,6 @@
 ﻿namespace LoraStatsNet.Services;
 
-public class FileLogger(string categoryName, FileWriter fileWriter) : ILogger
+class FileLogger(string categoryName, FileWriter fileWriter) : ILogger
 {
 	IDisposable ILogger.BeginScope<TState>(TState state) => null!;
 	bool ILogger.IsEnabled(LogLevel logLevel) => true;

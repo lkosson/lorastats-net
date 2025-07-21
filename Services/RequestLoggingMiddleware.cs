@@ -2,7 +2,7 @@
 
 namespace LoraStatsNet.Services;
 
-public class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
+class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
 {
 	public async Task InvokeAsync(HttpContext context)
 	{

@@ -2,7 +2,7 @@
 
 namespace LoraStatsNet.Services;
 
-public class FileWriter(string logPathTemplate, bool logCategoryName, bool logEventId, int rotate) : IDisposable
+class FileWriter(string logPathTemplate, bool logCategoryName, bool logEventId, int rotate) : IDisposable
 {
 	private StreamWriter? cachedWriter;
 	private string? cachedWriterPath;

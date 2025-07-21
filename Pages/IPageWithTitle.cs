@@ -1,6 +1,6 @@
 ﻿namespace LoraStatsNet.Pages;
 
-public interface IPageWithTitle
+interface IPageWithTitle
 {
 	string Title { get; }
 }
