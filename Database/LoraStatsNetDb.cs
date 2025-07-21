@@ -35,10 +35,12 @@ class LoraStatsNetDb : DbContext
 
 	public async Task InitializeAsync()
 	{
+		using var tx = await BeginTransactionAsync();
 		await Database.MigrateAsync();
+		await tx.CommitAsync();
 	}
 
-	public async Task<Transaction> BeginTransaction()
+	public async Task<Transaction> BeginTransactionAsync()
 	{
 		if (currentTransaction == null || currentTransaction.IsDisposed) currentTransaction = new Transaction(await Database.BeginTransactionAsync());
 		currentTransaction.Inc();

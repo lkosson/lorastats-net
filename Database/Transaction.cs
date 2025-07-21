@@ -2,7 +2,7 @@
 
 namespace LoraStatsNet.Database;
 
-class Transaction(IDbContextTransaction transaction)
+class Transaction(IDbContextTransaction transaction) : IDisposable
 {
 	public bool IsDisposed => nestingCounter == 0;
 
