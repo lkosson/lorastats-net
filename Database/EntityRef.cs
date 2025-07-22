@@ -11,10 +11,12 @@ interface IEntityRef
 readonly struct EntityRef<T> : IEntityRef, IConvertible where T : Entity<T>
 {
 	public readonly long Id { get; }
+	public readonly long? IdOrNull => Id == 0 ? null : Id;
 
 	public Type Type => typeof(T);
 
 	public EntityRef(long id) => Id = id;
+	public EntityRef(long? id) => Id = id.GetValueOrDefault();
 	public override string ToString() => Type.Name + "#" + Id;
 	public override bool Equals(object? otherObj) => otherObj is EntityRef<T> other && other.Id == Id && other.Type == Type;
 	public override int GetHashCode() => Id.GetHashCode();
@@ -22,8 +24,8 @@ readonly struct EntityRef<T> : IEntityRef, IConvertible where T : Entity<T>
 	public static bool operator !=(EntityRef<T> ref1, EntityRef<T> ref2) => ref1.Id != ref2.Id;
 	public static explicit operator long(EntityRef<T> r) => r.Id;
 	public static explicit operator long?(EntityRef<T> r) => r.Id == 0 ? null : r.Id;
-	public static implicit operator EntityRef<T>(long id) => new EntityRef<T>(id);
-	public static explicit operator EntityRef<T>(long? id) => id.GetValueOrDefault();
+	public static explicit operator EntityRef<T>(long id) => new EntityRef<T>(id);
+	public static explicit operator EntityRef<T>(long? id) => new EntityRef<T>(id);
 	public static implicit operator EntityRef<T>(Entity<T> entity) => entity == null ? default : entity.Ref;
 	public bool IsNull => Id == 0;
 	public bool IsNotNull => !IsNull;

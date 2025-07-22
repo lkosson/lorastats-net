@@ -5,7 +5,7 @@ namespace LoraStatsNet.Database;
 class EntityRefValueConverter<TEntity> : ValueConverter<EntityRef<TEntity>, long> where TEntity : Entity<TEntity>
 {
 	public EntityRefValueConverter()
-		: base(v => v.Id, v => v)
+		: base(v => v.Id, v => new EntityRef<TEntity>(v))
 	{
 	}
 }

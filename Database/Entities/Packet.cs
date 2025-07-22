@@ -6,7 +6,7 @@ class Packet : Entity<Packet>
 {
 	public uint PacketId { get; set; }
 	public EntityRef<Node> FromNodeId { get; set; }
-	public EntityRef<Node> ToNodeId { get; set; }
+	public EntityRef<Node>? ToNodeId { get; set; }
 	public DateTime FirstSeen { get; set; }
 	public byte HopStart { get; set; }
 	public bool WantAck { get; set; }
