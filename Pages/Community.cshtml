@@ -9,9 +9,117 @@
 	<label asp-for="Community.UrlName">Name for URL:</label>
 	<input asp-for="Community.UrlName" required placeholder="ml-radioville" />
 
+	<label>Drag with <em>CTRL</em> key to draw an area. Click with <em>CTRL</em> to remove.</label>
+	<div id="minimap"></div>
+
+	<input asp-for="Areas" type="hidden" />
+
 	<button asp-page-handler="Save">Save</button>
 	@if (Model.CommunityRef.IsNotNull)
 	{
 		<button asp-page-handler="Delete">Delete</button>
 	}
 </form>
+
+<link rel="stylesheet" href="/leaflet/leaflet.css" />
+<script src="/leaflet/leaflet.js"></script>
+<script type="text/javascript">
+	const nodeIcon = L.divIcon({ className: 'map-node'});
+
+	const map = L.map('minimap').fitBounds([[30, -20], [60, 30]]);
+
+	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+		opacity: 0.5,
+	}).addTo(map);
+
+	const areasElement = document.getElementById('Areas');
+	let newArea = null;
+	let newAreaStart = null;
+	let areaMoveStart = null;
+	let areas = [];
+
+	loadAreas();
+
+	function loadAreas() {
+		const loadedAreas = JSON.parse(areasElement.value);
+		let mapBounds = null;
+		for (const bounds of loadedAreas) {
+			if (mapBounds == null) mapBounds = L.latLngBounds(bounds);
+			else mapBounds.extend(bounds);
+			const area = addArea(bounds);
+			areas.push(area);
+		}
+		if (mapBounds) {
+			mapBounds = mapBounds.pad(0.5);
+			map.fitBounds(mapBounds);
+		}
+	}
+
+	function saveAreas() {
+		const savedAreas = [];
+		for (const area of areas) {
+			const nw = area.getBounds().getNorthWest();
+			const se = area.getBounds().getSouthEast();
+			savedAreas.push([[nw.lat, nw.lng], [se.lat, se.lng]]);
+		}
+		areasElement.value = JSON.stringify(savedAreas);
+	}
+
+	function addArea(bounds) {
+		const rect = L.rectangle(bounds, { color: '#80c090', fill: '#c0e0d080', weight: 1 });
+		rect.on('click', function(e) {
+			if (!e.originalEvent.ctrlKey) return;
+			rect.removeFrom(map);
+			areas.splice(areas.indexOf(rect), 1);
+			saveAreas();
+		});
+		rect.on('mousedown', function(e) {
+			map.dragging.disable();
+			areaMoveStart = e.latlng;
+		});
+		rect.on('mouseup', function(e) {
+			areaMoveStart = null;
+			map.dragging.enable();
+			saveAreas();
+		});
+		rect.on('mousemove', function(e) {
+			if (!areaMoveStart) return;
+			var bounds = rect.getBounds();
+			var nw = bounds.getNorthWest();
+			var se = bounds.getSouthEast();
+			var dlat = e.latlng.lat - areaMoveStart.lat;
+			var dlng = e.latlng.lng - areaMoveStart.lng;
+			areaMoveStart = e.latlng;
+			rect.setBounds([[nw.lat + dlat, nw.lng + dlng], [se.lat + dlat, se.lng + dlng]]);
+		});
+		rect.addTo(map);
+		return rect;
+	}
+
+	map.on('mousedown', function(e) {
+		if (!e.originalEvent.ctrlKey) return;
+		newAreaStart = coord = e.latlng;
+		newArea = null;
+		map.dragging.disable();
+	});
+
+	map.on('mouseup', function(e) {
+		map.dragging.enable();
+		newAreaStart = null;
+		if (!newArea) return;
+		if (e.originalEvent.ctrlKey) {
+			areas.push(newArea);
+			saveAreas();
+		} else newArea.removeFrom(map);
+		newArea = null;
+	});
+
+	map.on('mousemove', function(e) {
+		if (newAreaStart == null) return;
+		var bounds = [newAreaStart, e.latlng];
+		if (newArea == null) newArea = addArea(bounds);
+		else newArea.setBounds(bounds);
+	});
+</script>

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using LoraStatsNet.Database;
 using LoraStatsNet.Database.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -11,8 +12,8 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 {
 	public string Title => Community == null ? "New community" : $"Community {Community}";
 	[FromRoute(Name = "Id")] public EntityRef<Community> CommunityRef { get; set; }
-	[FromForm] public Community Community { get; set; }
-	public IReadOnlyCollection<CommunityArea> Areas { get; set; } = [];
+	[FromForm] public Community Community { get; set; } = default!;
+	[FromForm] public string Areas { get; set; } = default!;
 
 	public async Task<IActionResult> OnGetAsync()
 	{
@@ -20,7 +21,8 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		var community = CommunityRef.IsNull ? new Community { Name = "", UrlName = "" } : await db.GetAsync(CommunityRef);
 		if (community is null) return NotFound();
 		Community = community;
-		Areas = await db.CommunityAreas.Where(communityArea => communityArea.CommunityId == CommunityRef).ToListAsync();
+		var areas = await db.CommunityAreas.Where(communityArea => communityArea.CommunityId == CommunityRef).ToListAsync();
+		Areas = JsonSerializer.Serialize(areas.Select(communityArea => new[] { new[] { communityArea.LatitudeMin, communityArea.LongitudeMin }, new[] { communityArea.LatitudeMax, communityArea.LongitudeMax } }));
 		return Page();
 	}
 
@@ -30,8 +32,16 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		var community = CommunityRef.IsNull ? new Community { Name = "", UrlName = "" } : await db.GetAsync(CommunityRef);
 		if (community is null) return NotFound();
 		await TryUpdateModelAsync(community, nameof(Community), community => community.Name, community => community.UrlName);
+		var areas = JsonSerializer.Deserialize<double[][][]>(Areas)!;
 		using var tx = await db.BeginTransactionAsync();
+		var existingAreas = await db.CommunityAreas.Where(communityArea => communityArea.CommunityId == CommunityRef).ToListAsync();
 		await db.StoreAsync(community);
+		await db.DeleteAsync(existingAreas);
+		foreach (var area in areas)
+		{
+			var communityArea = new CommunityArea { CommunityId = community, LatitudeMin = area[0][0], LongitudeMin = area[0][1], LatitudeMax = area[1][0], LongitudeMax = area[1][1] };
+			await db.StoreAsync(communityArea);
+		}
 		await tx.CommitAsync();
 		return RedirectToPage("Communities");
 	}
