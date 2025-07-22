@@ -15,9 +15,9 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 {
 	public static SemaphoreSlim MUTEX = new(1);
 
-	private static async Task<Node> GetOrCreateNodeAsync(LoraStatsNetDb db, uint nodeId, Node? gatewayNode = null)
+	private static async Task<Node?> GetOrCreateNodeAsync(LoraStatsNetDb db, uint nodeId, Node? gatewayNode = null)
 	{
-		if (nodeId == UInt32.MaxValue) return Node.BROADCAST;
+		if (nodeId == UInt32.MaxValue) return null;
 		var changed = false;
 		var node = await db.Nodes.FirstOrDefaultAsync(node => node.NodeId == nodeId);
 		if (node == null)
@@ -89,14 +89,27 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 		var gatewayNode = await GetOrCreateNodeAsync(db, gatewayId);
 		var fromNode = await GetOrCreateNodeAsync(db, meshPacket.From, gatewayNode);
 		var toNode = await GetOrCreateNodeAsync(db, meshPacket.To);
+
+		if (gatewayNode == null)
+		{
+			logger.LogInformation("Invalid gateway node Id {node:x8}", gatewayId);
+			return;
+		}
+
+		if (fromNode == null)
+		{
+			logger.LogInformation("Invalid source node Id {node:x8}", meshPacket.From);
+			return;
+		}
+
 		var packet = await db.Packets.FirstOrDefaultAsync<Packet>(e => e.PacketId == meshPacket.Id && e.FromNode == fromNode && e.FirstSeen > DateTime.Now.AddMinutes(-15));
 		if (packet == null || packet.Port == PortNum.TracerouteApp)
 		{
 			packet ??= new Packet
 			{
 				PacketId = meshPacket.Id,
-				FromNode = fromNode,
-				ToNode = toNode,
+				FromNodeId = fromNode,
+				ToNodeId = toNode?.Ref,
 				HopStart = (byte)meshPacket.HopStart,
 				WantAck = meshPacket.WantAck,
 				Channel = (byte)meshPacket.Channel,
@@ -122,7 +135,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				if (meshPacket.Decoded.Portnum == PortNum.TelemetryApp) ProcessTelemetry(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.PositionApp) ProcessPosition(fromNode, ref fromNodePositionUpdated, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.NodeinfoApp) ProcessNodeInfo(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
-				else if (meshPacket.Decoded.Portnum == PortNum.TracerouteApp) ProcessTraceroute(fromNode, toNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
+				else if (meshPacket.Decoded.Portnum == PortNum.TracerouteApp && toNode != null) ProcessTraceroute(fromNode, toNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.NeighborinfoApp) ProcessNeighborInfo(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.RoutingApp) ProcessRouting(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.TextMessageApp) ProcessTextMessage(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
@@ -146,7 +159,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				if (fromNodeDirty) await db.StoreAsync(fromNode);
 			}
 
-			if (fromNode.CommunityId.IsNull)
+			if (fromNode.CommunityId is null)
 			{
 				logger.LogDebug("Ignoring packet from node \"{node}\" belonging unknown community.", fromNode);
 				return;
@@ -160,8 +173,8 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 
 		packetReport = new PacketReport
 		{
-			Packet = packet,
-			Gateway = gatewayNode,
+			PacketId = packet,
+			GatewayId = gatewayNode,
 			ReceptionTime = DateTime.Now,
 			SNR = meshPacket.RxSnr,
 			RSSI = (byte)meshPacket.RxRssi,
@@ -174,7 +187,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 
 		var packetData = new PacketData
 		{
-			PacketReport = packetReport,
+			PacketReportId = packetReport,
 			RawData = meshPacket.ToByteArray()
 		};
 		await db.StoreAsync(packetData);

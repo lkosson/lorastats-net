@@ -16,6 +16,10 @@ builder.Services.AddSingleton(configuration);
 builder.Services.AddFileLoggerProvider(configuration);
 builder.Services.AddRazorPages();
 
+builder.Services.AddSingleton<MeshCrypto>();
+builder.Services.AddHostedService<MQTTService>();
+builder.Services.AddScoped<MQTTWorker>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
