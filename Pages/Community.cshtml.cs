@@ -39,7 +39,14 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		await db.DeleteAsync(existingAreas);
 		foreach (var area in areas)
 		{
-			var communityArea = new CommunityArea { CommunityId = community, LatitudeMin = area[0][0], LongitudeMin = area[0][1], LatitudeMax = area[1][0], LongitudeMax = area[1][1] };
+			var communityArea = new CommunityArea
+			{
+				CommunityId = community,
+				LatitudeMin = Math.Min(area[0][0], area[1][0]),
+				LongitudeMin = Math.Min(area[0][1], area[1][1]),
+				LatitudeMax = Math.Max(area[0][0], area[1][0]),
+				LongitudeMax = Math.Max(area[0][1], area[1][1])
+			};
 			await db.StoreAsync(communityArea);
 		}
 		await tx.CommitAsync();
