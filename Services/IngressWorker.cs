@@ -161,6 +161,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 
 			if (fromNode.CommunityId is null)
 			{
+				await tx.CommitAsync();
 				logger.LogDebug("Ignoring packet from node \"{node}\" belonging unknown community.", fromNode);
 				return;
 			}
