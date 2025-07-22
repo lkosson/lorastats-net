@@ -116,6 +116,11 @@ input
 	margin-bottom: 1em;
 }
 
+.node
+{
+	font-weight: normal;
+}
+
 .node > span
 {
 	display: inline-block;
@@ -123,6 +128,9 @@ input
 	min-width: 3em;
 	text-align: center;
 	border-radius: 0.2em;
+	margin-right: 0.4em;
+	margin-bottom: 0.2em;
+	margin-top: 0.2em;
 }
 
 *[title]

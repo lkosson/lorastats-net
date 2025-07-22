@@ -34,6 +34,19 @@ class Node : Entity<Node>
 	public bool HasValidLocation => LastLatitude.HasValue && LastLongitude.HasValue && LastPositionUpdate.HasValue && HasRecentLocation;
 	public bool HasRecentLocation => LastPositionUpdate.HasValue && LastPositionUpdate.Value >= DateTime.Now.AddDays(-1);
 	public Coordinates? Coordinates => HasValidLocation ? new(LastLatitude!.Value, LastLongitude!.Value) : null;
+	public (string foreColor, string backColor) NodeColors
+	{
+		get
+		{
+			var r = (NodeId & 0xFF0000) >> 16;
+			var g = (NodeId & 0x00FF00) >> 8;
+			var b = (NodeId & 0x0000FF);
+			var brightness = ((r * 0.299) + (g * 0.587) + (b * 0.114)) / 255;
+			var foreColor = brightness > 0.5 ? "#000" : "#fff";
+			var backColor = $"#{r:X2}{g:X2}{b:X2}";
+			return (foreColor, backColor);
+		}
+	}
 
 	public override string ToString() => ShortNameOrDefault;
 }

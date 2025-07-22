@@ -16,6 +16,7 @@ readonly struct Coordinates
 		Longitude = longitude;
 	}
 
+	public double[] ForMap => [Latitude, Longitude];
 	public override string ToString() => $"{LatitudeFmt}, {LongitudeFmt}";
 	public override bool Equals([NotNullWhen(true)] object? obj) => obj is Coordinates other && other.Latitude == Latitude && other.Longitude == Longitude;
 	public override int GetHashCode() => HashCode.Combine(Latitude, Longitude);

@@ -11,6 +11,7 @@ namespace LoraStatsNet.Pages;
 class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 {
 	public string Title => Community == null ? "New community" : $"Community {Community}";
+	public string Nodes { get; set; }
 	[FromRoute(Name = "Id")] public EntityRef<Community> CommunityRef { get; set; }
 	[FromForm] public Community Community { get; set; } = default!;
 	[FromForm] public string Areas { get; set; } = default!;
@@ -20,7 +21,9 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		if (!User?.Identity?.IsAuthenticated ?? false) return Unauthorized();
 		var community = CommunityRef.IsNull ? new Community { Name = "", UrlName = "" } : await db.GetAsync(CommunityRef);
 		if (community is null) return NotFound();
+		var nodes = await db.Nodes.Where(node => node.LastLatitude.HasValue && node.LastLongitude.HasValue).ToListAsync();
 		Community = community;
+		Nodes = MapNode.JsonForNodes(nodes);
 		var areas = await db.CommunityAreas.Where(communityArea => communityArea.CommunityId == CommunityRef).ToListAsync();
 		Areas = JsonSerializer.Serialize(areas.Select(communityArea => new[] { new[] { communityArea.LatitudeMin, communityArea.LongitudeMin }, new[] { communityArea.LatitudeMax, communityArea.LongitudeMax } }));
 		return Page();

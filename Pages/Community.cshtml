@@ -13,6 +13,7 @@
 	<div id="minimap"></div>
 
 	<input asp-for="Areas" type="hidden" />
+	<input asp-for="Nodes" type="hidden" />
 
 	<button asp-page-handler="Save">Save</button>
 	@if (Model.CommunityRef.IsNotNull)
@@ -23,16 +24,14 @@
 
 <link rel="stylesheet" href="/leaflet/leaflet.css" />
 <script src="/leaflet/leaflet.js"></script>
+
+@section Scripts
+{
 <script type="text/javascript">
-	const nodeIcon = L.divIcon({ className: 'map-node'});
+	const map = initMap();
+	const nodes = JSON.parse(document.getElementById('Nodes').value);
 
-	const map = L.map('minimap').fitBounds([[30, -20], [60, 30]]);
-
-	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		maxZoom: 19,
-		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-		opacity: 0.5,
-	}).addTo(map);
+	addNodes(map, nodes);
 
 	const areasElement = document.getElementById('Areas');
 	let newArea = null;
@@ -123,3 +122,4 @@
 		else newArea.setBounds(bounds);
 	});
 </script>
+}
