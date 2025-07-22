@@ -1,0 +1,17 @@
+﻿@page "{Id=0}/{handler?}"
+@model CommunityModel
+
+<form method="post">
+
+	<label asp-for="Community.Name">Community name:</label>
+	<input asp-for="Community.Name" required placeholder="Meshland - Radioville" />
+
+	<label asp-for="Community.UrlName">Name for URL:</label>
+	<input asp-for="Community.UrlName" required placeholder="ml-radioville" />
+
+	<button asp-page-handler="Save">Save</button>
+	@if (Model.CommunityRef.IsNotNull)
+	{
+		<button asp-page-handler="Delete">Delete</button>
+	}
+</form>

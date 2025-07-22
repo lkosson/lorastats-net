@@ -1,0 +1,23 @@
+﻿@page
+@model CommunitiesModel
+
+<table>
+	<thead>
+		<tr>
+			<th>Community name</th>
+			<th>URL name</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var community in Model.Communities)
+		{
+			<tr>
+				<td><a asp-page="Community" asp-route-id="@community.Ref.Id">@community.Name</a></td>
+				<td>@community.UrlName</td>
+			</tr>
+		}
+		<tr>
+			<td colspan="2"><a asp-page="Community" asp-route-id="0">Add new</a></td>
+		</tr>
+	</tbody>
+</table>

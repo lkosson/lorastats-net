@@ -104,6 +104,18 @@ table th
 	white-space: pre;
 }
 
+label
+{
+	display: block;
+}
+
+input
+{
+	display: block;
+	font-size: 1.2em;
+	margin-bottom: 1em;
+}
+
 .node > span
 {
 	display: inline-block;
