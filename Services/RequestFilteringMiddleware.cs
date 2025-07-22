@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Claims;
 
 namespace LoraStatsNet.Services;
 
@@ -15,6 +16,14 @@ class RequestFilteringMiddleware(RequestDelegate next, ILogger<RequestFilteringM
 				context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 				logger.LogInformation("Blocked {ip} (matching {mask})", context.Connection.RemoteIpAddress, mask);
 				return;
+			}
+		}
+		foreach (var mask in configuration.AdminIPs)
+		{
+			if (context.Connection.RemoteIpAddress != null && IsInSubnet(context.Connection.RemoteIpAddress, mask))
+			{
+				context.User = new ClaimsPrincipal(new ClaimsIdentity([new(ClaimTypes.NameIdentifier, "admin")], "ip"));
+				break;
 			}
 		}
 		await next(context);

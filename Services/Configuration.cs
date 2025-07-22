@@ -8,6 +8,7 @@ class Configuration(IConfiguration configuration)
 	public IConfiguration ConfigurationSource => configuration;
 	public string DataDir => configuration.GetValue<string>("DataDir") ?? ".";
 	public string[] BlockedIPs => configuration.GetSection("BlockedIPs").Get<string[]>() ?? [];
+	public string[] AdminIPs => configuration.GetSection("AdminIPs").Get<string[]>() ?? [];
 	public string DbPath => configuration.GetValue<string>("DbPath") ?? Path.Combine(DataDir, "database.sqlite3");
 	public Channels Channels => new Channels(configuration.GetSection("Channels"));
 	public MQTTs MQTTs => new MQTTs(configuration.GetSection("MQTT"));
