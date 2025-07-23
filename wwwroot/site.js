@@ -10,6 +10,10 @@
 	return map;
 }
 
+function buildNodeMarker() {
+	return L.divIcon({ className: 'map-node' });
+}
+
 function buildNodePlate(node) {
 	return `<a class="node" href="${node.url}"><span style="background-color: ${node.backColor}; color: ${node.foreColor}">${node.shortName}</span>${node.longName}</a>`;
 }
@@ -23,7 +27,7 @@ function buildNodePopup(node) {
 }
 
 function addNodes(map, nodes) {
-	const nodeIcon = L.divIcon({ className: 'map-node' });
+	const nodeIcon = buildNodeMarker();
 	const nodeGroup = L.layerGroup().addTo(map);
 	for (const node of nodes) {
 		const marker = L.marker(node.coordinates, { icon: nodeIcon })

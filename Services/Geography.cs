@@ -1,4 +1,6 @@
-﻿namespace LoraStatsNet.Services;
+﻿using LoraStatsNet.Database.Entities;
+
+namespace LoraStatsNet.Services;
 
 static class Geography
 {
@@ -13,5 +15,12 @@ static class Geography
 		var p2 = k2 * dlon;
 		var d = Math.Sqrt(p1 * p1 + p2 * p2);
 		return Math.Round(d, 3);
+	}
+
+	public static double? DistanceTo(this Node node1, Node node2)
+	{
+		if (!node1.HasValidLocation) return null;
+		if (!node2.HasValidLocation) return null;
+		return Distance(node1.Coordinates!.Value, node2.Coordinates!.Value);
 	}
 }

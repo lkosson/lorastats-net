@@ -45,15 +45,15 @@ class NodesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		if (Enum.TryParse<Config.Types.DeviceConfig.Types.Role>(RoleName, out var role)) nodes = nodes.Where(e => e.Role == role).ToList();
 
 		var nodesByRef = nodes.ToDictionary(node => node.Ref);
-		var activeNodeRefs = packets.Select(e => e.FromNode).ToHashSet();
-		var packetsByNode = packets.ToLookup(e => e.FromNode, e => e.Port);
+		var activeNodeRefs = packets.Select(packet => packet.FromNode).ToHashSet();
+		var packetsByNode = packets.ToLookup(packet => packet.FromNode, packet => packet.Port);
 		var packetsByNodeHour = new Dictionary<EntityRef<Node>, int[]>();
 
 		BucketHours = Enumerable.Range(0, ActivityBuckets)
-				.Select(n => DateTime.Now.AddHours(-n * HoursPerBucket))
-				.Select(endTime => (startTime: endTime.AddHours(-HoursPerBucket), endTime))
-				.Select(range => $"{range.startTime:H:mm} - {range.endTime:H:mm}")
-				.ToArray();
+			.Select(n => DateTime.Now.AddHours(-n * HoursPerBucket))
+			.Select(endTime => (startTime: endTime.AddHours(-HoursPerBucket), endTime))
+			.Select(range => $"{range.startTime:H:mm} - {range.endTime:H:mm}")
+			.ToArray();
 
 		foreach (var packet in packets)
 		{
@@ -68,29 +68,59 @@ class NodesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		}
 		NodeActivity = packetsByNodeHour;
 
-		ActiveNodes = nodes.Where(e => activeNodeRefs.Contains(e)).OrderByDescending(e => e.LastSeen).Select((e, i) => (nr: i + 1, node: e)).ToList();
-		TopUptime = nodes.Where(e => e.LastBoot.HasValue).OrderBy(e => e.LastBoot!.Value).Take(25).Select((e, i) => (nr: i + 1, node: e)).ToList();
+		ActiveNodes = nodes
+			.Where(activeNodeRefs.Contains)
+			.OrderByDescending(node => node.LastSeen)
+			.Select((e, i) => (nr: i + 1, node: e))
+			.ToList();
+		TopUptime = nodes
+			.Where(node => node.LastBoot.HasValue)
+			.OrderBy(node => node.LastBoot!.Value)
+			.Take(25)
+			.Select((node, i) => (nr: i + 1, node))
+			.ToList();
 		SpammingNodes = nodes
-			.Where(e => activeNodeRefs.Contains(e))
-			.Select(e => (node: e, packets: packetsByNode[e]))
+			.Where(activeNodeRefs.Contains)
+			.Select(node => (node, packets: packetsByNode[node]))
 			.OrderByDescending(e => e.packets.Count())
 			.Select((e, i) => (
 				nr: i + 1,
-				node: e.node,
+				e.node,
 				packetCount: e.packets.Count(),
-				posCount: e.packets.Where(f => f == PortNum.PositionApp).Count(),
-				infoCount: e.packets.Where(f => f == PortNum.NodeinfoApp).Count(),
-				neighCount: e.packets.Where(f => f == PortNum.NeighborinfoApp).Count(),
-				tracerouteCount: e.packets.Where(f => f == PortNum.TracerouteApp).Count(),
-				telemetryCount: e.packets.Where(f => f == PortNum.TelemetryApp).Count(),
-				textCount: e.packets.Where(f => f == PortNum.TextMessageApp).Count()
+				posCount: e.packets.Where(packet => packet == PortNum.PositionApp).Count(),
+				infoCount: e.packets.Where(packet => packet == PortNum.NodeinfoApp).Count(),
+				neighCount: e.packets.Where(packet => packet == PortNum.NeighborinfoApp).Count(),
+				tracerouteCount: e.packets.Where(packet => packet == PortNum.TracerouteApp).Count(),
+				telemetryCount: e.packets.Where(packet => packet == PortNum.TelemetryApp).Count(),
+				textCount: e.packets.Where(packet => packet == PortNum.TextMessageApp).Count()
 			))
 			.Take(25)
 			.ToList();
 		TotalPackets = packets.Count;
-		ActiveGateways = reports.GroupBy(e => e.GatewayId).Select(e => (node: nodesByRef.GetValueOrDefault(e.Key)!, lastReception: e.Max(f => f.ReceptionTime), packetCount: e.Select(f => f.Packet).Distinct().Count())).Where(e => e.node != null).OrderByDescending(e => e.packetCount).Where(e => e.node != null).ToList();
-		NodesByRole = nodes.Select(e => e.Role).Where(e => e.HasValue).GroupBy(e => e!.Value).Select(e => (role: e.Key.ToString(), count: e.Count())).OrderByDescending(e => e.count).ToList();
-		NodesByModel = nodes.Select(e => e.HwModel).Where(e => e.HasValue).GroupBy(e => e!.Value).Select(e => (role: e.Key.ToString(), count: e.Count())).OrderByDescending(e => e.count).ToList();
+		ActiveGateways = reports
+			.GroupBy(report => report.GatewayId)
+			.Select(gateway => (
+				node: nodesByRef.GetValueOrDefault(gateway.Key)!,
+				lastReception: gateway.Max(report => report.ReceptionTime),
+				packetCount: gateway.Select(report => report.Packet).Distinct().Count()))
+			.Where(e => e.node != null)
+			.OrderByDescending(e => e.packetCount)
+			.Where(e => e.node != null)
+			.ToList();
+		NodesByRole = nodes
+			.Select(node => node.Role)
+			.Where(role => role.HasValue)
+			.GroupBy(role => role!.Value)
+			.Select(role => (role: role.Key.ToString(), count: role.Count()))
+			.OrderByDescending(e => e.count)
+			.ToList();
+		NodesByModel = nodes
+			.Select(node => node.HwModel)
+			.Where(model => model.HasValue)
+			.GroupBy(model => model!.Value)
+			.Select(model => (role: model.Key.ToString(), count: model.Count()))
+			.OrderByDescending(e => e.count)
+			.ToList();
 
 		return Page();
 	}

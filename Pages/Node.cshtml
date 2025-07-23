@@ -1,0 +1,159 @@
+﻿@page "{id}"
+@model LoraStatsNet.Pages.NodeModel
+
+<h1>@Model.Node.LongName</h1>
+
+<table>
+	<caption>Metadata</caption>
+	<tbody>
+		<tr>
+			<th>Short name</th>
+			<td>@Model.Node.ShortName</td>
+		</tr>
+		<tr>
+			<th>Full name</th>
+			<td>@Model.Node.LongName</td>
+		</tr>
+		<tr>
+			<th>Node ID</th>
+			<td title="@Model.Node.NodeId">@Model.Node.NodeIdFmt</td>
+		</tr>
+		<tr>
+			<th>Role</th>
+			<td>@Model.Node.RoleFmt</td>
+		</tr>
+		<tr>
+			<th>Hardware model</th>
+			<td>@Model.Node.HwModelFmt</td>
+		</tr>
+		<tr>
+			<th>Last seen</th>
+			<td><vc:rel-time value="Model.Node.LastSeen"></vc:rel-time></td>
+		</tr>
+		@if (Model.Node.HasValidLocation)
+		{
+			<tr>
+				<th>Last position</th>
+				<td>@Model.Node.Coordinates</td>
+			</tr>
+			<tr>
+				<th>Last position update</th>
+				<td><vc:rel-time value="Model.Node.LastPositionUpdate"></vc:rel-time></td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+@if (Model.Node.HasValidLocation)
+{
+	<div id="minimap"></div>
+}
+
+<vc:packets packets="Model.PacketsSent" title="Packets sent" include-from=false></vc:packets>
+
+<vc:packets packets="Model.PacketsReceived" title="Packets addressed to node" include-to=false></vc:packets>
+
+@if (Model.NodesReached.Any())
+{
+	<table>
+		<caption>Reported by</caption>
+		<thead>
+			<tr>
+				<th>Node</th>
+				<th>Distance</th>
+				<th>Hop count</th>
+				<th>Received packets</th>
+				<th>Last seen</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var (node, distance, hopStats, hopAvg, lastReport, packetPct) in Model.NodesReached)
+			{
+				<tr>
+					<td><vc:node value="@node"></vc:node></td>
+					<td class="num">@Formatter.FormatDistance(distance)</td>
+					<td class="num">
+						<table class="hops">
+							<tbody>
+								<tr>
+									@for (var i=0;i<hopStats.Length;i++)
+									{
+										<td>
+											<div style="background-color: @ColorPalette.Value(hopStats[i], 100)" title="@i: @hopStats[i]%">@i</div>
+										</td>
+									}
+								</tr>
+							</tbody>
+						</table>
+						@hopAvg.ToString("0.0")
+					</td>
+					<td class="num">
+						<div class="pct" style="max-width: @packetPct%; background-color: @ColorPalette.Value(packetPct, 100)">
+							@packetPct%
+						</div>
+						
+					</td>
+					<td><a asp-page="Report" asp-route-id="@lastReport.Ref.Id"><vc:rel-time value="@lastReport.ReceptionTime"></vc:rel-time></a></td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@if (Model.NodesReachedDirectly.Any())
+{
+	<table>
+		<caption>Direct connections</caption>
+		<thead>
+			<tr>
+				<th>Node</th>
+				<th>Distance</th>
+				<th>RSSI</th>
+				<th>SNR</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var (node, distance, rssi, snr) in Model.NodesReachedDirectly)
+			{
+				<tr>
+					<td><vc:node value="@node"></vc:node></td>
+					<td class="num">@Formatter.FormatDistance(distance)</td>
+					<td class="num">@Formatter.FormatRSSI(rssi)</td>
+					<td class="num">@Formatter.FormatSNR(snr)</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@section Scripts
+{
+	@if (Model.Node.HasValidLocation)
+	{
+		<link rel="stylesheet" href="/leaflet/leaflet.css" />
+		<script src="/leaflet/leaflet.js"></script>
+		<script type="text/javascript">
+			var nodeCoords = @Html.Raw(Formatter.FormatJSONCoordinates(Model.Node.Coordinates));
+			var otherNodes = @Html.Raw(MapNode.JsonForNodes(Model.NodesReached.Where(e => e.node.HasValidLocation), e => e.node, e => new { color = ColorPalette.Value(e.packetPct, 100), e.packetPct, hopsAvg = e.hopAvg.ToString("0.0") }));
+			var map = initMap('minimap', nodeCoords);
+			map.setView(nodeCoords, 13);
+
+			L.marker(nodeCoords).addTo(map);
+
+			addNodes(map, otherNodes);
+
+			let mapBounds = null;
+			for (const otherNode of otherNodes) {
+				if (mapBounds == null) mapBounds = L.latLngBounds(nodeCoords, otherNode.coordinates);
+				else mapBounds.extend(otherNode.coordinates);
+				L.polyline([nodeCoords, otherNode.coordinates], { color: otherNode.extra.color })
+					.bindTooltip(_ => buildNodeTooltip(otherNode) + `<br />${otherNode.extra.packetPct}% of all packets received<br />${otherNode.extra.hopsAvg} hops avg`, { sticky: true })
+					.addTo(map);
+			}
+			if (mapBounds) {
+				mapBounds = mapBounds.pad(0.5);
+				map.fitBounds(mapBounds);
+			}
+		</script>
+	}
+}
