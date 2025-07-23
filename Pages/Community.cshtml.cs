@@ -66,4 +66,46 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		await tx.CommitAsync();
 		return RedirectToPage("Communities");
 	}
+
+	public async Task<IActionResult> OnPostReassignAsync()
+	{
+		if (!User?.Identity?.IsAuthenticated ?? false) return Unauthorized();
+		using var tx = await db.BeginTransactionAsync();
+		var communityAreas = (await db.CommunityAreas.ToListAsync()).OrderBy(area => area.Area.AreaKm).ToList();
+		var nodesWithPosition = await db.Nodes.Where(node => node.LastLatitude.HasValue && node.LastLongitude.HasValue).ToListAsync();
+		var communityByNode = new Dictionary<EntityRef<Node>, EntityRef<Community>>();
+		foreach (var node in nodesWithPosition)
+		{
+			if (!node.HasValidLocation) continue;
+
+			foreach (var area in communityAreas)
+			{
+				if (!area.Area.IsInside(node.Coordinates!.Value)) continue;
+				if (node.CommunityId != area.CommunityId)
+				{
+					node.CommunityId = area.CommunityId;
+					await db.StoreAsync(node);
+				}
+				communityByNode[node] = area.CommunityId;
+				break;
+			}
+		}
+		var reportedNodes = await db.PacketReports
+			.Where(report => report.Gateway.LastLatitude.HasValue && report.Gateway.LastLongitude.HasValue)
+			.Select(report => new { report.GatewayId, report.Packet.FromNode })
+			.Distinct()
+			.ToListAsync();
+
+		foreach (var entry in reportedNodes)
+		{
+			if (entry.FromNode.HasValidLocation) continue;
+			if (!communityByNode.TryGetValue(entry.GatewayId, out var communityRef)) continue;
+			if (entry.FromNode.CommunityId == communityRef) continue;
+			entry.FromNode.CommunityId = communityRef;
+			await db.StoreAsync(entry.FromNode);
+		}
+
+		await tx.CommitAsync();
+		return RedirectToPage();
+	}
 }
