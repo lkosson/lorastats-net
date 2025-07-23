@@ -146,17 +146,15 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 
 				if (fromNodePositionUpdated)
 				{
+					fromNodeDirty = true;
+
 					var matchingAreas = await db.CommunityAreas
 						.Where(communityArea => communityArea.LatitudeMin <= fromNode.LastLatitude && communityArea.LatitudeMax >= fromNode.LastLatitude
 							&& communityArea.LongitudeMin <= fromNode.LastLongitude && communityArea.LongitudeMax >= fromNode.LastLongitude)
 						.ToListAsync();
 					var smallestArea = matchingAreas.OrderBy(communityArea => communityArea.Area.AreaKm).FirstOrDefault();
 
-					if (smallestArea != null && fromNode.CommunityId != smallestArea.CommunityId)
-					{
-						fromNode.CommunityId = smallestArea.CommunityId;
-						fromNodeDirty = true;
-					}
+					if (smallestArea != null && fromNode.CommunityId != smallestArea.CommunityId) fromNode.CommunityId = smallestArea.CommunityId;
 				}
 
 				if (fromNodeDirty) await db.StoreAsync(fromNode);
