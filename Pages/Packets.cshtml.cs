@@ -20,10 +20,14 @@ class PacketsModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 
 	public async Task<IActionResult> OnGetAsync()
 	{
+		var community = await db.Communities.FirstOrDefaultAsync(community => community.UrlName == CommunityUrl);
+		if (community == null) return NotFound();
+		Community = community;
+
 		var packets = await db.Packets
 			.Include(packet => packet.FromNode)
 			.Include(packet => packet.ToNode)
-			.Where(packet => packet.FirstSeen >= DateTime.Now.AddHours(-24))
+			.Where(packet => packet.FromNode.CommunityId == Community && packet.FirstSeen >= DateTime.Now.AddHours(-24))
 			.ToListAsync();
 
 		if (Enum.TryParse<PortNum>(TypeName, out var type)) packets = packets.Where(e => e.Port == type).ToList();
