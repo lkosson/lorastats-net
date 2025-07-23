@@ -22,12 +22,20 @@ public class Channels(IConfiguration configuration)
 	private static Channel? GetForSection(IConfigurationSection configurationSection) => String.IsNullOrEmpty(configurationSection.Key) || String.IsNullOrEmpty(configurationSection.Value) ? null : new Channel(configurationSection.Key, configurationSection.Value);
 }
 
-public class Channel(string name, string pskString)
+public class Channel
 {
-	public string Name { get; init; } = name;
-	public string PSKString { get; init; } = pskString;
-	public byte[] PSK => GetPSKForKey(PSKString);
-	public byte Hash => ChannelHash(Name, PSK);
+	public string Name { get; init; }
+	public string PSKString { get; init; }
+	public byte[] PSK { get; init; }
+	public byte Hash { get; init; }
+
+	public Channel(string name, string pskString)
+	{
+		Name = name;
+		PSKString = pskString;
+		PSK = GetPSKForKey(PSKString);
+		Hash = ChannelHash(Name, PSK);
+	}
 
 	private static byte[] GetPSKForKey(string key)
 	{

@@ -14,6 +14,5 @@ static class PacketDataBuilder
 		builder.Property(e => e.Ref).HasColumnName("Id").ValueGeneratedOnAdd().HasConversion<EntityRefValueConverter<PacketData>>().IsRequired();
 		builder.Property(e => e.PacketReportId).HasConversion<EntityRefValueConverter<PacketReport>>().IsRequired();
 		builder.Property(e => e.RawData).IsRequired();
-
 	}
 }
