@@ -9,7 +9,7 @@
 	<label asp-for="Community.UrlName">Name for URL:</label>
 	<input asp-for="Community.UrlName" required placeholder="ml-radioville" />
 
-	<label>Drag with <em>CTRL</em> key to draw an area. Click with <em>CTRL</em> to remove.</label>
+	<label>Drag with <em>CTRL</em> key to draw an area or resize existing area. Click with <em>ALT</em> key to remove.</label>
 	<div id="minimap"></div>
 
 	<input asp-for="Areas" type="hidden" />
@@ -69,14 +69,22 @@
 	function addArea(bounds) {
 		const rect = L.rectangle(bounds, { color: '#80c090', fill: '#c0e0d080', weight: 1 });
 		rect.on('click', function(e) {
-			if (!e.originalEvent.ctrlKey) return;
+			if (!e.originalEvent.altKey) return;
 			rect.removeFrom(map);
 			areas.splice(areas.indexOf(rect), 1);
 			saveAreas();
+			L.DomEvent.stopPropagation(e);
 		});
 		rect.on('mousedown', function(e) {
 			map.dragging.disable();
-			areaMoveStart = e.latlng;
+			if (e.originalEvent.ctrlKey) {
+				newArea = rect;
+				newAreaStart = rect.getBounds().getNorthWest();
+				areas.splice(areas.indexOf(rect), 1);
+			} else {
+				areaMoveStart = e.latlng;
+			}
+			L.DomEvent.stopPropagation(e);
 		});
 		rect.on('mouseup', function(e) {
 			areaMoveStart = null;
