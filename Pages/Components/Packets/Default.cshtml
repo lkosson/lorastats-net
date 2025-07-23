@@ -1,0 +1,49 @@
+﻿@using LoraStatsNet.Database.Entities
+@model (IEnumerable<Packet> packets, string title, bool includeFrom, bool includeTo)
+
+<table>
+	<caption>@Model.title</caption>
+	<thead>
+		<tr>
+			<th>Num</th>
+			<th>Packet Id</th>
+			<th>Time</th>
+			@if (Model.includeFrom)
+			{
+				<th>Sent by</th>
+			}
+			@if (Model.includeTo)
+			{
+				<th>Sent to</th>
+			}
+			<th>Channel</th>
+			<th>Port</th>
+			<th>HopStart</th>
+			<th>Request Id</th>
+			<th>Payload</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var (nr, packet) in Model.packets.Select((e, i) => (nr: i + 1, packet: e)))
+		{
+			<tr>
+				<th class="num">@nr</th>
+				<td class="pre num"><a asp-page="Packet" asp-route-id="@packet.Ref.Id">@packet.PacketIdFmt</a></td>
+				<td class="num"><vc:abs-time value="@packet.FirstSeen"></vc:abs-time></td>
+				@if (Model.includeFrom)
+				{
+					<td><vc:node value="@packet.FromNode"></vc:node></td>
+				}
+				@if (Model.includeTo)
+				{
+					<td><vc:node value="@packet.ToNode"></vc:node></td>
+				}
+				<td class="pre"><vc:channel value="@packet.Channel"></vc:channel></td>
+				<td class="pre" title="@((int)packet.Port)">@packet.PortFmt</td>
+				<td class="pre num">@packet.HopStart</td>
+				<td class="pre num">@packet.RequestIdFmt</td>
+				<td><vc:payload packet="@packet"></vc:payload></td>
+			</tr>
+		}
+	</tbody>
+</table>

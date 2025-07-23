@@ -1,0 +1,20 @@
+﻿@using LoraStatsNet.Database.Entities
+@using System.Globalization
+@model Packet
+
+@if (Model.Port == Meshtastic.Protobufs.PortNum.TracerouteApp || Model.Port == Meshtastic.Protobufs.PortNum.NeighborinfoApp)
+{
+	/*
+	foreach (var nodeIdFmt in Model.ParsedPayload?.Split(',') ?? [])
+	{
+		if (!UInt32.TryParse(nodeIdFmt, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var nodeId)) continue;
+		if (nodeId == 0 || nodeId == UInt32.MaxValue) continue;
+		var node = cache.Nodes.Get(nodeId);
+		<vc:node value="@node" short-only="true"></vc:node>
+	}
+	*/
+}
+else
+{
+	@Model.ParsedPayload
+}

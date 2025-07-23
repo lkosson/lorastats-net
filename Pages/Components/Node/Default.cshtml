@@ -1,0 +1,21 @@
+﻿@model (LoraStatsNet.Database.Entities.Node? node, string foreColor, string backColor, bool shortOnly)
+@if (Model.node == null)
+{
+	<text></text>
+}
+else if (Model.node.Ref.IsNull)
+{
+	<a class="node">
+		<span class="short" title="Unknown node" style="background-color: #fff; color: #000">????</span>
+	</a>
+}
+else
+{
+	<a asp-page="Node" asp-route-id="@Model.node.Ref.Id" class="node">
+		<span class="short" title="@Model.node.NodeIdFmt" style="background-color: @Model.backColor; color: @Model.foreColor">@Model.node.ShortNameOrDefault</span>
+		@if (!Model.shortOnly)
+		{
+			@Model.node.LongNameOrDefault
+		}
+	</a>
+}

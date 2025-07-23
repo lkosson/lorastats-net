@@ -1,0 +1,9 @@
+﻿@model (DateTime? time, string relTime)
+@if (Model.time is null)
+{
+	<text>(none)</text>
+}
+else
+{
+	<span title="@Model.relTime">@Model.time?.ToString("yyyy-MM-dd HH:mm:ss")</span>
+}
