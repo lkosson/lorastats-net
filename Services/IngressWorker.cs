@@ -157,6 +157,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				}
 
 				if (fromNodeDirty) await db.StoreAsync(fromNode);
+				packet.ParsedPayload = parsedPayload;
 			}
 
 			if (fromNode.CommunityId is null)

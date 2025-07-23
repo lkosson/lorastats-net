@@ -1,4 +1,5 @@
-﻿using Meshtastic.Protobufs;
+﻿using System.Globalization;
+using Meshtastic.Protobufs;
 
 namespace LoraStatsNet.Database.Entities;
 
@@ -20,6 +21,11 @@ public class Packet : Entity<Packet>
 	public Node FromNode { get; set; } = default!;
 	public Node ToNode { get; set; } = default!;
 	public List<PacketReport> Reports { get; set; } = default!;
+
+	public uint[] ParsedPayloadNodeIds => (ParsedPayload?.Split(',') ?? [])
+		.Select(stringId => UInt32.TryParse(stringId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var nodeId) && nodeId != 0 && nodeId != 0xffffffff ? nodeId : 0)
+		.Where(nodeId => nodeId != 0)
+		.ToArray();
 
 	public string PacketIdFmt => PacketId.ToString("x8");
 	public string PortFmt => Port == PortNum.UnknownApp ? "" : Port.ToString();
