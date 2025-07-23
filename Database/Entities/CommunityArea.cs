@@ -2,7 +2,7 @@
 
 namespace LoraStatsNet.Database.Entities;
 
-class CommunityArea : Entity<CommunityArea>
+public class CommunityArea : Entity<CommunityArea>
 {
 	public EntityRef<Community> CommunityId { get; set; }
 	public double LatitudeMin { get; set; }

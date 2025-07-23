@@ -1,6 +1,6 @@
 ﻿namespace LoraStatsNet.Database.Entities;
 
-class PacketReport : Entity<PacketReport>
+public class PacketReport : Entity<PacketReport>
 {
 	public EntityRef<Packet> PacketId { get; set; }
 	public EntityRef<Node> GatewayId { get; set; }

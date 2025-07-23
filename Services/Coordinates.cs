@@ -2,7 +2,7 @@
 
 namespace LoraStatsNet.Services;
 
-readonly struct Coordinates
+public readonly struct Coordinates
 {
 	public double Latitude { get; init; }
 	public double Longitude { get; init; }

@@ -8,7 +8,7 @@ interface IEntityRef
 }
 
 [TypeConverter(typeof(EntityRefTypeConverter))]
-readonly struct EntityRef<T> : IEntityRef, IConvertible where T : Entity<T>
+public readonly struct EntityRef<T> : IEntityRef, IConvertible where T : Entity<T>
 {
 	public readonly long Id { get; }
 	public readonly long? IdOrNull => Id == 0 ? null : Id;

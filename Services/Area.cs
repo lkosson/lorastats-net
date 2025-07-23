@@ -2,7 +2,7 @@
 
 namespace LoraStatsNet.Services;
 
-readonly struct Area
+public readonly struct Area
 {
 	public Coordinates CoordinatesMin { get; init; }
 	public Coordinates CoordinatesMax { get; init; }

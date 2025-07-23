@@ -2,7 +2,7 @@
 
 namespace LoraStatsNet.Database.Entities;
 
-class Packet : Entity<Packet>
+public class Packet : Entity<Packet>
 {
 	public uint PacketId { get; set; }
 	public EntityRef<Node> FromNodeId { get; set; }

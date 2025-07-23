@@ -1,6 +1,6 @@
 ﻿namespace LoraStatsNet.Database.Entities;
 
-class Community : Entity<Community>
+public class Community : Entity<Community>
 {
 	public required string Name { get; set; }
 	public required string UrlName { get; set; }

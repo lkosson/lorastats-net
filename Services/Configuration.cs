@@ -3,7 +3,7 @@ using Meshtastic;
 
 namespace LoraStatsNet.Services;
 
-class Configuration(IConfiguration configuration)
+public class Configuration(IConfiguration configuration)
 {
 	public IConfiguration ConfigurationSource => configuration;
 	public string DataDir => configuration.GetValue<string>("DataDir") ?? ".";
@@ -14,7 +14,7 @@ class Configuration(IConfiguration configuration)
 	public MQTTs MQTTs => new MQTTs(configuration.GetSection("MQTT"));
 }
 
-class Channels(IConfiguration configuration)
+public class Channels(IConfiguration configuration)
 {
 	public IReadOnlyCollection<Channel> All => configuration.GetChildren().Select(section => GetForSection(section)!).ToList();
 	public Channel? GetByName(string name) => GetForSection(configuration.GetSection(name));
@@ -22,7 +22,7 @@ class Channels(IConfiguration configuration)
 	private static Channel? GetForSection(IConfigurationSection configurationSection) => String.IsNullOrEmpty(configurationSection.Key) || String.IsNullOrEmpty(configurationSection.Value) ? null : new Channel(configurationSection.Key, configurationSection.Value);
 }
 
-class Channel(string name, string pskString)
+public class Channel(string name, string pskString)
 {
 	public string Name { get; init; } = name;
 	public string PSKString { get; init; } = pskString;
@@ -52,12 +52,12 @@ class Channel(string name, string pskString)
 	public override string ToString() => Name;
 }
 
-class MQTTs(IConfiguration configuration)
+public class MQTTs(IConfiguration configuration)
 {
 	public IReadOnlyCollection<MQTT> All => configuration.GetChildren().Select(section => new MQTT(section)).ToList();
 }
 
-class MQTT(IConfiguration configuration)
+public class MQTT(IConfiguration configuration)
 {
 	public string Server => configuration.GetValue<string>("Server") ?? "";
 	public string? Login => configuration.GetValue<string>("Login");

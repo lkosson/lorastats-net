@@ -1,10 +1,10 @@
 ﻿namespace LoraStatsNet.Database;
 
-class Entity
+public class Entity
 {
 }
 
-class Entity<T> : Entity, IConvertible
+public class Entity<T> : Entity, IConvertible
 	where T : Entity<T>
 {
 	public EntityRef<T> Ref { get; set; }

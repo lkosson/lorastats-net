@@ -3,7 +3,7 @@ using Meshtastic.Protobufs;
 
 namespace LoraStatsNet.Database.Entities;
 
-class Node : Entity<Node>
+public class Node : Entity<Node>
 {
 	public static readonly Node BROADCAST = new Node { NodeId = 0xffffffff, ShortName = "****", LongName = "BROADCAST" };
 
