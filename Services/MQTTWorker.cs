@@ -31,10 +31,13 @@ internal class MQTTWorker(ILogger<MQTTWorker> logger, IServiceProvider servicePr
 			var connectResponse = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 			logger.LogDebug("Connection result: {result}", connectResponse);
 
-			logger.LogDebug("Subscribing to {topic}", mqtt.Topic);
-			var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(mqtt.Topic).Build();
-			var subscribeResponse = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
-			logger.LogDebug("Subscription result: {result}", subscribeResponse);
+			foreach (var topic in mqtt.Topics)
+			{
+				logger.LogDebug("Subscribing to {topic}", topic);
+				var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(topic).Build();
+				var subscribeResponse = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+				logger.LogDebug("Subscription result: {result}", subscribeResponse);
+			}
 
 			await Task.Delay(Timeout.InfiniteTimeSpan, ctsWatchdog.Token);
 			if (cancellationToken.IsCancellationRequested) break;

@@ -70,7 +70,7 @@ public class MQTT(IConfiguration configuration)
 	public string Server => configuration.GetValue<string>("Server") ?? "";
 	public string? Login => configuration.GetValue<string>("Login");
 	public string? Password => configuration.GetValue<string>("Password");
-	public string Topic => configuration.GetValue<string>("Topic") ?? "";
+	public string[] Topics => configuration.GetSection("Topics").Get<string[]>() ?? [];
 
 	public override string ToString() => Server;
 }
