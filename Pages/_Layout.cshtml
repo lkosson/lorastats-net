@@ -1,6 +1,6 @@
 ﻿@model IPageWithTitle
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,6 +18,14 @@
 		<nav>
 			<a asp-page="Index">Info</a>
 			<a asp-page="Communities">Communities</a>
+			@{
+				var community = ViewContext.RouteData.Values["Community"] as string;
+			}
+			@if (!String.IsNullOrEmpty(community))
+			{
+				<a asp-page="Nodes" asp-route-community="@community">Nodes</a>
+				<a asp-page="Packets" asp-route-community="@community">Packets</a>
+			}
 		</nav>
 	</header>
 	<article>
