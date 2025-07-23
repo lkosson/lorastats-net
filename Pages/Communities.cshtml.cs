@@ -13,6 +13,7 @@ class CommunitiesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 	public IReadOnlyCollection<Community> Communities { get; private set; } = default!;
 	public string Nodes { get; set; } = default!;
 	public string Areas { get; set; } = default!;
+	public Dictionary<EntityRef<Community>, int> NodeCount { get; set; } = default!;
 
 	public async Task OnGetAsync()
 	{
@@ -31,5 +32,6 @@ class CommunitiesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 
 		var nodes = await db.Nodes.Where(node => node.LastLatitude.HasValue && node.LastLongitude.HasValue).ToListAsync();
 		Nodes = MapNode.JsonForNodes(nodes);
+		NodeCount = nodes.Where(node => node.CommunityId.HasValue).GroupBy(node => node.CommunityId!.Value).ToDictionary(g => g.Key, g => g.Count());
 	}
 }

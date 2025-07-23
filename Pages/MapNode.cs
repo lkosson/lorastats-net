@@ -9,6 +9,7 @@ struct MapNode
 	public required string longName { get; set; }
 	public required string foreColor { get; set; }
 	public required string backColor { get; set; }
+	public required string url { get; set; }
 	public required double[]? coordinates { get; set; }
 	public required string lastSeen { get; set; }
 	public required string lastPositionUpdate { get; set; }
@@ -19,6 +20,7 @@ struct MapNode
 		longName = node.LongNameOrDefault,
 		foreColor = node.NodeColors.foreColor,
 		backColor = node.NodeColors.backColor,
+		url = $"/Node/{node.Ref.Id}",
 		coordinates = node.Coordinates?.ForMap,
 		lastSeen = node.LastSeen.ToString("yyyy-MM-dd HH:mm:ss"),
 		lastPositionUpdate = node.LastPositionUpdate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"

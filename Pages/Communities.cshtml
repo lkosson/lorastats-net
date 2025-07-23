@@ -5,26 +5,48 @@
 
 @if (User.Identity?.IsAuthenticated ?? false)
 {
-<table>
-	<thead>
-		<tr>
-			<th>Community name</th>
-			<th>URL name</th>
-		</tr>
-	</thead>
-	<tbody>
-		@foreach (var community in Model.Communities)
-		{
+	<table>
+		<thead>
 			<tr>
-				<td><a asp-page="Community" asp-route-id="@community.Ref.Id">@community.Name</a></td>
-				<td>@community.UrlName</td>
+				<th>Community name</th>
+				<th>URL name</th>
+				<th>Nodes</th>
 			</tr>
-		}
-		<tr>
-			<td colspan="2"><a asp-page="Community" asp-route-id="0">Add new</a></td>
-		</tr>
-	</tbody>
-</table>
+		</thead>
+		<tbody>
+			@foreach (var community in Model.Communities)
+			{
+				<tr>
+					<td><a asp-page="Community" asp-route-id="@community.Ref.Id">@community.Name</a></td>
+					<td><a asp-page="Nodes" asp-route-community="@community.UrlName">@community.UrlName</a></td>
+					<td>@Model.NodeCount.GetValueOrDefault(community.Ref)</td>
+				</tr>
+			}
+			<tr>
+				<td colspan="3"><a asp-page="Community" asp-route-id="0">Add new</a></td>
+			</tr>
+		</tbody>
+	</table>
+}
+else
+{
+	<table>
+		<thead>
+			<tr>
+				<th>Community</th>
+				<th>Nodes</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var community in Model.Communities)
+			{
+				<tr>
+					<td><a asp-page="Nodes" asp-route-community="@community.UrlName">@community.Name</a></td>
+					<td>@Model.NodeCount.GetValueOrDefault(community.Ref)</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 }
 
 <input asp-for="Areas" type="hidden" />

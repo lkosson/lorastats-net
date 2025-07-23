@@ -141,6 +141,7 @@ input
 #map
 {
 	height: 90vh;
+	margin-bottom: 1em;
 }
 
 #minimap
