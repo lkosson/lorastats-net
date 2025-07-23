@@ -28,5 +28,7 @@ static class NodeBuilder
 		builder.Property(e => e.PublicKey);
 
 		builder.HasOne(e => e.Community).WithMany(e => e.Nodes).HasForeignKey(e => e.CommunityId).OnDelete(DeleteBehavior.Cascade);
+
+		builder.HasIndex(e => e.NodeId);
 	}
 }
