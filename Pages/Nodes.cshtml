@@ -1,0 +1,166 @@
+﻿@page "/{Community}/Nodes/{Role?}"
+@model NodesModel
+
+<table>
+	<caption>Nodes active in last @Model.HistoryHours hours</caption>
+	<thead>
+		<tr>
+			<th>Num</th>
+			<th>Node</th>
+			<th>Last heard</th>
+			<th>Activity</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var (nr, node) in Model.ActiveNodes)
+		{
+			<tr>
+				<th class="num">@nr</th>
+				<td><vc:node value="node"></vc:node></td>
+				<td class="num"><vc:rel-time value="node.LastSeen"></vc:rel-time></td>
+				<td>
+					@{
+						var stats = Model.NodeActivity[node];
+					}
+
+					<table class="hops">
+						<tbody>
+							<tr>
+								@for (var i = stats.Length - 1; i >= 0; i--)
+								{
+									<td>
+										<div style="background-color: @ColorPalette.Value(stats[i], 9)" title="@($"{Model.BucketHours[i]}: {stats[i]} packets")">&nbsp;</div>
+									</td>
+								}
+							</tr>
+						</tbody>
+					</table>
+					@stats.Sum()
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<table>
+	<caption>Babblers</caption>
+	<thead>
+		<tr>
+			<th>Num</th>
+			<th>Node</th>
+			<th>Packets / @Model.HistoryHours h</th>
+			<th>PositionInfo</th>
+			<th>NodeInfo</th>
+			<th>NeighborInfo</th>
+			<th>Traceroute</th>
+			<th>TelemetryInfo</th>
+			<th>TextMessage</th>
+			<th>% of total</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var (nr, node, packets, posCount, infoCount, neighCount, tracerouteCount, telemetryCount, textCount) in Model.SpammingNodes)
+		{
+			<tr>
+				<th class="num">@nr</th>
+				<td><vc:node value="node"></vc:node></td>
+				<td class="num">@packets</td>
+				<td class="num">@posCount</td>
+				<td class="num">@infoCount</td>
+				<td class="num">@neighCount</td>
+				<td class="num">@tracerouteCount</td>
+				<td class="num">@telemetryCount</td>
+				<td class="num">@textCount</td>
+				<td class="num">@((packets * 100f / Model.TotalPackets).ToString("0.00")) %</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<table>
+	<caption>Uptime King of the Hill</caption>
+	<thead>
+		<tr>
+			<th>Num</th>
+			<th>Node</th>
+			<th>Model</th>
+			<th>Last restart</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var (nr, node) in Model.TopUptime)
+		{
+			<tr>
+				<th class="num">@nr</th>
+				<td><vc:node value="node"></vc:node></td>
+				<td>@node.HwModelFmt</td>
+				<td class="num"><vc:abs-time value="node.LastBoot"></vc:abs-time></td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+@if (Model.ActiveGateways.Any())
+{
+	<table>
+		<caption>Gateways</caption>
+		<thead>
+			<tr>
+				<th>Node</th>
+				<th>Last report</th>
+				<th>Uplinked packets</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var (node, lastReception, packetCount) in Model.ActiveGateways)
+			{
+				<tr>
+					<td><vc:node value="node"></vc:node></td>
+					<td class="num"><vc:rel-time value="lastReception"></vc:rel-time></td>
+					<td class="num">@packetCount</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@if (String.IsNullOrEmpty(Model.RoleName))
+{
+	<table>
+		<caption>Nodes by role</caption>
+		<thead>
+			<tr>
+				<th>Role</th>
+				<th>Node count</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var (role, count) in Model.NodesByRole)
+			{
+				<tr>
+					<th><a asp-page="Nodes" asp-route-role="@role">@role</a></th>
+					<td>@count</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+<table>
+	<caption>Nodes by model</caption>
+	<thead>
+		<tr>
+			<th>Model</th>
+			<th>Node count</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var (modelname, count) in Model.NodesByModel)
+		{
+			<tr>
+				<th>@modelname</th>
+				<td>@count</td>
+			</tr>
+		}
+	</tbody>
+</table>
