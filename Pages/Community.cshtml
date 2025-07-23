@@ -21,15 +21,14 @@
 	}
 </form>
 
-<input asp-for="Nodes" type="hidden" />
-<link rel="stylesheet" href="/leaflet/leaflet.css" />
-<script src="/leaflet/leaflet.js"></script>
 
 @section Scripts
 {
+<link rel="stylesheet" href="/leaflet/leaflet.css" />
+<script src="/leaflet/leaflet.js"></script>
 <script type="text/javascript">
 	const map = initMap('minimap');
-	const nodes = JSON.parse(document.getElementById('Nodes').value);
+	const nodes = @Html.Raw(Model.Nodes);
 
 	addNodes(map, nodes);
 

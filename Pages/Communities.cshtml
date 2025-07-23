@@ -49,8 +49,6 @@ else
 	</table>
 }
 
-<input asp-for="Areas" type="hidden" />
-<input asp-for="Nodes" type="hidden" />
 <link rel="stylesheet" href="/leaflet/leaflet.css" />
 <script src="/leaflet/leaflet.js"></script>
 
@@ -58,14 +56,14 @@ else
 {
 	<script type="text/javascript">
 		const map = initMap('map');
-		const nodes = JSON.parse(document.getElementById('Nodes').value);
+		const nodes = @Html.Raw(Model.Nodes);
 
 		addNodes(map, nodes);
 
 		loadAreas();
 
 		function loadAreas() {
-			const areas = JSON.parse(document.getElementById('Areas').value);
+			const areas = @Html.Raw(Model.Areas);
 			let mapBounds = null;
 			for (const area of areas) {
 				if (mapBounds == null) mapBounds = L.latLngBounds(area.bounds);
