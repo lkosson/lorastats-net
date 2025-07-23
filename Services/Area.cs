@@ -10,6 +10,7 @@ readonly struct Area
 	public double LatitudeExtentKm => Geography.Distance(new(CoordinatesMin.Latitude, MidPoint.Longitude), new(CoordinatesMax.Latitude, MidPoint.Longitude));
 	public double LongitudeExtentKm => Geography.Distance(new(MidPoint.Latitude, CoordinatesMin.Longitude), new(MidPoint.Latitude, CoordinatesMax.Longitude));
 	public double AreaKm => LatitudeExtentKm * LongitudeExtentKm;
+	public double[][] ForMap => [CoordinatesMin.ForMap, CoordinatesMax.ForMap];
 
 	public Area(Coordinates coordinatesMin, Coordinates coordinatesMax)
 	{

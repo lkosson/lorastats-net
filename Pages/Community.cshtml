@@ -13,7 +13,6 @@
 	<div id="minimap"></div>
 
 	<input asp-for="Areas" type="hidden" />
-	<input asp-for="Nodes" type="hidden" />
 
 	<button asp-page-handler="Save">Save</button>
 	@if (Model.CommunityRef.IsNotNull)
@@ -22,13 +21,14 @@
 	}
 </form>
 
+<input asp-for="Nodes" type="hidden" />
 <link rel="stylesheet" href="/leaflet/leaflet.css" />
 <script src="/leaflet/leaflet.js"></script>
 
 @section Scripts
 {
 <script type="text/javascript">
-	const map = initMap();
+	const map = initMap('minimap');
 	const nodes = JSON.parse(document.getElementById('Nodes').value);
 
 	addNodes(map, nodes);

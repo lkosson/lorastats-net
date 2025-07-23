@@ -1,6 +1,10 @@
 ﻿@page
 @model CommunitiesModel
 
+<div id="map"></div>
+
+@if (User.Identity?.IsAuthenticated ?? false)
+{
 <table>
 	<thead>
 		<tr>
@@ -21,3 +25,38 @@
 		</tr>
 	</tbody>
 </table>
+}
+
+<input asp-for="Areas" type="hidden" />
+<input asp-for="Nodes" type="hidden" />
+<link rel="stylesheet" href="/leaflet/leaflet.css" />
+<script src="/leaflet/leaflet.js"></script>
+
+@section Scripts
+{
+	<script type="text/javascript">
+		const map = initMap('map');
+		const nodes = JSON.parse(document.getElementById('Nodes').value);
+
+		addNodes(map, nodes);
+
+		loadAreas();
+
+		function loadAreas() {
+			const areas = JSON.parse(document.getElementById('Areas').value);
+			let mapBounds = null;
+			for (const area of areas) {
+				if (mapBounds == null) mapBounds = L.latLngBounds(area.bounds);
+				else mapBounds.extend(area.bounds);
+				L.rectangle(area.bounds, { color: '#80c090', fill: '#c0e0d080', weight: 1 })
+					.bindTooltip(area.name, { sticky: true })
+					.on('click', function() { window.location = area.url; })
+					.addTo(map);
+			}
+			if (mapBounds) {
+				mapBounds = mapBounds.pad(0.5);
+				map.fitBounds(mapBounds);
+			}
+		}
+	</script>
+}

@@ -1,5 +1,5 @@
-﻿function initMap() {
-	const map = L.map('minimap').fitBounds([[30, -20], [60, 30]]);
+﻿function initMap(selector) {
+	const map = L.map(selector).fitBounds([[30, -20], [60, 30]]);
 
 	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
