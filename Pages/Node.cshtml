@@ -1,5 +1,5 @@
 ﻿@page "{id}"
-@model LoraStatsNet.Pages.NodeModel
+@model NodeModel
 
 <h1>@Model.Node.LongName</h1>
 
@@ -8,11 +8,11 @@
 	<tbody>
 		<tr>
 			<th>Short name</th>
-			<td>@Model.Node.ShortName</td>
+			<td>@Model.Node.ShortNameOrDefault</td>
 		</tr>
 		<tr>
 			<th>Full name</th>
-			<td>@Model.Node.LongName</td>
+			<td>@Model.Node.LongNameOrDefault</td>
 		</tr>
 		<tr>
 			<th>Node ID</th>

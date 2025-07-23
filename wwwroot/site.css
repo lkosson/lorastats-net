@@ -2,7 +2,7 @@
 {
 	color: #262626;
 	font-family: Calibri, sans-serif;
-	font-size: 1.1em;
+	font-size: 1em;
 	margin: 0;
 }
 
@@ -128,9 +128,7 @@ input
 	min-width: 3em;
 	text-align: center;
 	border-radius: 0.2em;
-	margin-right: 0.4em;
-	margin-bottom: 0.2em;
-	margin-top: 0.2em;
+	margin-right: 0.1em;
 }
 
 *[title]
