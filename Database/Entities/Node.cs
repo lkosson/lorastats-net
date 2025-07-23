@@ -29,6 +29,7 @@ public class Node : Entity<Node>
 	public string NodeIdFmt => NodeId.ToString("x8");
 	public string RoleFmt => Role.HasValue ? Role.Value.ToString() : "";
 	public string HwModelFmt => HwModel.HasValue ? HwModel.Value.ToString() : "";
+	public double? LastPositionPrecisionDistance => LastPositionPrecision.HasValue ? 23328 / (1 << (LastPositionPrecision.Value - 10)) * 0.001 : null;
 	public string ShortNameOrDefault => ShortName ?? NodeIdFmt[^4..];
 	public string LongNameOrDefault => LongName ?? (NodeId == 0 || NodeId == 0xffffffff ? "" : $"Meshtastic {ShortNameOrDefault}");
 	public bool HasValidLocation => LastLatitude.HasValue && LastLongitude.HasValue && LastPositionUpdate.HasValue && HasRecentLocation;

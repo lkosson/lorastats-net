@@ -37,6 +37,10 @@
 				<td>@Model.Node.Coordinates</td>
 			</tr>
 			<tr>
+				<th>Position precision</th>
+				<td>@Formatter.FormatDistance(Model.Node.LastPositionPrecisionDistance)</td>
+			</tr>
+			<tr>
 				<th>Last position update</th>
 				<td><vc:rel-time value="Model.Node.LastPositionUpdate"></vc:rel-time></td>
 			</tr>
@@ -150,10 +154,7 @@
 					.bindTooltip(_ => buildNodeTooltip(otherNode) + `<br />${otherNode.extra.packetPct}% of all packets received<br />${otherNode.extra.hopsAvg} hops avg`, { sticky: true })
 					.addTo(map);
 			}
-			if (mapBounds) {
-				mapBounds = mapBounds.pad(0.5);
-				map.fitBounds(mapBounds);
-			}
+			if (mapBounds) map.fitBounds(mapBounds);
 		</script>
 	}
 }
