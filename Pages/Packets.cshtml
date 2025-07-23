@@ -1,0 +1,46 @@
+﻿@page "/{Community}/Packets/{Type?}"
+@using System.Globalization
+@model PacketsModel
+
+<vc:packets packets="Model.LastPackets" title="Last packets"></vc:packets>
+
+@if (Model.PacketsByType.Count > 1)
+{
+	<table>
+		<caption>Packets by type</caption>
+		<thead>
+			<tr>
+				<th>Type</th>
+				<th>Packet count</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var (type, count) in Model.PacketsByType)
+			{
+				<tr>
+					<td><a asp-page="Packets" asp-route-type="@type">@type</a></td>
+					<td>@count</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+<table>
+	<caption>Packets by initial hop count</caption>
+	<thead>
+		<tr>
+			<th>HopStart</th>
+			<th>Packet count</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var (ttl, count) in Model.PacketsByTTL)
+		{
+			<tr>
+				<td>@ttl</td>
+				<td>@count</td>
+			</tr>
+		}
+	</tbody>
+</table>
