@@ -1,0 +1,16 @@
+﻿@page "/{Community}/Messages/{Channel?}"
+@model MessagesModel
+
+<table>
+	<tbody>
+		@foreach (var message in Model.Messages)
+		{
+			<tr>
+				<th><a asp-page="Packet" asp-route-id="@message.Ref.Id">@message.FirstSeen.ToString("yyyy-MM-dd HH:mm:ss")</a></th>
+				<th><vc:node value="@message.FromNode"></vc:node></th>
+				<th><a asp-page="Messages" asp-route-channel="@message.Channel"><vc:channel value="@message.Channel"></vc:channel></a></th>
+				<td><vc:payload packet="@message"></vc:payload></td>
+			</tr>
+		}
+	</tbody>
+</table>
