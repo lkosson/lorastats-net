@@ -24,6 +24,11 @@ if (configuration.Liam)
 	builder.Services.AddHostedService<LiamService>();
 	builder.Services.AddScoped<LiamWorker>();
 }
+if (configuration.Multicast.IpToNodeMapping.Count > 0)
+{
+	builder.Services.AddHostedService<MulticastService>();
+	builder.Services.AddScoped<MulticastWorker>();
+}
 
 var app = builder.Build();
 

@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Net;
+using System.Text;
 using Meshtastic;
 
 namespace LoraStatsNet.Services;
@@ -13,6 +15,7 @@ public class Configuration(IConfiguration configuration)
 	public Channels Channels => new Channels(configuration.GetSection("Channels"));
 	public MQTTs MQTTs => new MQTTs(configuration.GetSection("MQTT"));
 	public bool Liam => configuration.GetValue("Liam", false);
+	public Multicast Multicast => new Multicast(configuration.GetSection("Multicast"));
 }
 
 public class Channels(IConfiguration configuration)
@@ -74,4 +77,15 @@ public class MQTT(IConfiguration configuration)
 	public string[] Topics => configuration.GetSection("Topics").Get<string[]>() ?? [];
 
 	public override string ToString() => Server;
+}
+
+public class Multicast(IConfiguration configuration)
+{
+	public IReadOnlyCollection<(IPAddress ip, uint nodeId)> IpToNodeMapping => configuration
+		.GetChildren()
+		.Select(e => IPAddress.TryParse(e.Key, out var ip) && UInt32.TryParse(e.Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var nodeId) ? (ip, nodeId) : default)
+		.Where(e => e != default)
+		.ToList();
+
+	public UInt32 GetNodeIdByIP(IPAddress ip) => IpToNodeMapping.FirstOrDefault(e => e.ip.Equals(ip)).nodeId;
 }
