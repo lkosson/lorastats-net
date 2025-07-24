@@ -1,6 +1,7 @@
 using System.Globalization;
 using LoraStatsNet.Database;
 using LoraStatsNet.Database.Entities;
+using LoraStatsNet.Services;
 using Meshtastic.Protobufs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LoraStatsNet.Pages;
 
-class MapModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
+class MapModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IPageWithTitle
 {
 	public string Title => $"Map - {Community}";
 	[FromRoute(Name = "Community")] public string CommunityUrl { get; set; } = default!;
@@ -16,7 +17,7 @@ class MapModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 	public Community Community { get; set; } = default!;
 	public string Nodes { get; set; } = default!;
 	public IReadOnlyCollection<(Node fromNode, Node toNode, string color, int traceroutes, int reports, int neighbors)> Links { get; private set; } = default!;
-	public int HistoryHours => 24;
+	public int HistoryHours => configuration.ReportingHours;
 
 	public async Task<IActionResult> OnGetAsync()
 	{

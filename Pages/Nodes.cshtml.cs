@@ -1,5 +1,6 @@
 using LoraStatsNet.Database;
 using LoraStatsNet.Database.Entities;
+using LoraStatsNet.Services;
 using Meshtastic.Protobufs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LoraStatsNet.Pages;
 
-class NodesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
+class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IPageWithTitle
 {
 	public string Title => $"Nodes - {Community}";
 	[FromRoute(Name = "Community")] public string CommunityUrl { get; set; } = default!;
@@ -22,7 +23,7 @@ class NodesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 	public List<(string role, int count)> NodesByRole { get; private set; } = default!;
 	public List<(string model, int count)> NodesByModel { get; private set; } = default!;
 	public Dictionary<EntityRef<Node>, int[]> NodeActivity { get; private set; } = default!;
-	public int HistoryHours => 24;
+	public int HistoryHours => configuration.ReportingHours;
 	public int ActivityBuckets => 8;
 	public int HoursPerBucket => HistoryHours / ActivityBuckets;
 	public string[] BucketHours { get; private set; } = default!;

@@ -1,5 +1,6 @@
 using LoraStatsNet.Database;
 using LoraStatsNet.Database.Entities;
+using LoraStatsNet.Services;
 using Meshtastic.Protobufs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LoraStatsNet.Pages;
 
-class PacketsModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
+class PacketsModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IPageWithTitle
 {
 	public string Title => $"Packets - {Community}";
 	[FromRoute(Name = "Community")] public string CommunityUrl { get; set; } = default!;
@@ -27,7 +28,7 @@ class PacketsModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		var packets = await db.Packets
 			.Include(packet => packet.FromNode)
 			.Include(packet => packet.ToNode)
-			.Where(packet => packet.FromNode.CommunityId == Community && packet.FirstSeen >= DateTime.Now.AddHours(-24))
+			.Where(packet => packet.FromNode.CommunityId == Community && packet.FirstSeen >= DateTime.Now.AddHours(-configuration.ReportingHours))
 			.ToListAsync();
 
 		if (Enum.TryParse<PortNum>(TypeName, out var type)) packets = packets.Where(e => e.Port == type).ToList();
