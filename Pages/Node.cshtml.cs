@@ -26,6 +26,9 @@ class NodeModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		if (node == null) return NotFound();
 		var reports = await db.PacketReports
 			.Include(report => report.Packet)
+			.ThenInclude(report => report.FromNode)
+			.Include(report => report.Packet)
+			.ThenInclude(report => report.ToNode)
 			.Include(report => report.Gateway)
 			.Where(report => report.Packet.FromNodeId == NodeRef || report.Packet.ToNodeId == NodeRef)
 			.ToListAsync();
