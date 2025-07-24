@@ -12,6 +12,7 @@ public class Configuration(IConfiguration configuration)
 	public string DbPath => configuration.GetValue<string>("DbPath") ?? Path.Combine(DataDir, "database.sqlite3");
 	public Channels Channels => new Channels(configuration.GetSection("Channels"));
 	public MQTTs MQTTs => new MQTTs(configuration.GetSection("MQTT"));
+	public bool Liam => configuration.GetValue("Liam", false);
 }
 
 public class Channels(IConfiguration configuration)

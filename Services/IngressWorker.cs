@@ -54,23 +54,23 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 			return;
 		}
 
-		await ProcessPacket(meshPacket, gatewayId);
+		await ProcessPacket(meshPacket, gatewayId, DateTime.Now);
 	}
 
 	protected async Task ProcessMeshPacket(byte[] blob, uint gatewayId)
 	{
 		var meshPacket = MeshPacket.Parser.ParseFrom(blob);
-		await ProcessPacket(meshPacket, gatewayId);
+		await ProcessPacket(meshPacket, gatewayId, DateTime.Now);
 	}
 
-	private async Task ProcessPacket(MeshPacket meshPacket, uint gatewayId)
+	protected async Task ProcessPacket(MeshPacket meshPacket, uint gatewayId, DateTime now)
 	{
 		try
 		{
 			await MUTEX.WaitAsync();
 			using var scope = serviceProvider.CreateScope();
 			var db = scope.ServiceProvider.GetRequiredService<LoraStatsNetDb>();
-			await ProcessPacketUnsafe(db, meshPacket, gatewayId);
+			await ProcessPacketUnsafe(db, meshPacket, gatewayId, now);
 		}
 		catch (Exception exc)
 		{
@@ -82,7 +82,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 		}
 	}
 
-	private async Task ProcessPacketUnsafe(LoraStatsNetDb db, MeshPacket meshPacket, uint gatewayId)
+	private async Task ProcessPacketUnsafe(LoraStatsNetDb db, MeshPacket meshPacket, uint gatewayId, DateTime now)
 	{
 		using var tx = await db.BeginTransactionAsync();
 
@@ -102,7 +102,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 			return;
 		}
 
-		var packet = await db.Packets.FirstOrDefaultAsync<Packet>(e => e.PacketId == meshPacket.Id && e.FromNode == fromNode && e.FirstSeen > DateTime.Now.AddMinutes(-15));
+		var packet = await db.Packets.FirstOrDefaultAsync<Packet>(e => e.PacketId == meshPacket.Id && e.FromNode == fromNode && e.FirstSeen > now.AddMinutes(-15));
 		if (packet == null || packet.Port == PortNum.TracerouteApp)
 		{
 			packet ??= new Packet
@@ -113,7 +113,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				HopStart = (byte)meshPacket.HopStart,
 				WantAck = meshPacket.WantAck,
 				Channel = (byte)meshPacket.Channel,
-				FirstSeen = DateTime.Now
+				FirstSeen = now
 			};
 
 			var channel = meshCrypto.TryDecode(meshPacket);
@@ -132,8 +132,8 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 				packet.BitField = (byte)meshPacket.Decoded.Bitfield;
 				packet.RequestId = meshPacket.Decoded.RequestId;
 
-				if (meshPacket.Decoded.Portnum == PortNum.TelemetryApp) ProcessTelemetry(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
-				else if (meshPacket.Decoded.Portnum == PortNum.PositionApp) ProcessPosition(fromNode, ref fromNodePositionUpdated, ref parsedPayload, meshPacket.Decoded);
+				if (meshPacket.Decoded.Portnum == PortNum.TelemetryApp) ProcessTelemetry(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded, now);
+				else if (meshPacket.Decoded.Portnum == PortNum.PositionApp) ProcessPosition(fromNode, ref fromNodePositionUpdated, ref parsedPayload, meshPacket.Decoded, now);
 				else if (meshPacket.Decoded.Portnum == PortNum.NodeinfoApp) ProcessNodeInfo(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.TracerouteApp && toNode != null) ProcessTraceroute(fromNode, toNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
 				else if (meshPacket.Decoded.Portnum == PortNum.NeighborinfoApp) ProcessNeighborInfo(fromNode, ref fromNodeDirty, ref parsedPayload, meshPacket.Decoded);
@@ -178,7 +178,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 		{
 			PacketId = packet,
 			GatewayId = gatewayNode,
-			ReceptionTime = DateTime.Now,
+			ReceptionTime = now,
 			SNR = meshPacket.RxSnr,
 			RSSI = (byte)meshPacket.RxRssi,
 			HopLimit = (byte)meshPacket.HopLimit,
@@ -200,11 +200,11 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 		await tx.CommitAsync();
 	}
 
-	private static void ProcessDeviceMetrics(Node fromNode, ref bool fromNodeDirty, ref string parsedPayload, DeviceMetrics deviceMetrics)
+	private static void ProcessDeviceMetrics(Node fromNode, ref bool fromNodeDirty, ref string parsedPayload, DeviceMetrics deviceMetrics, DateTime now)
 	{
 		if (deviceMetrics.UptimeSeconds > 0)
 		{
-			fromNode.LastBoot = DateTime.Now.AddSeconds(-deviceMetrics.UptimeSeconds);
+			fromNode.LastBoot = now.AddSeconds(-deviceMetrics.UptimeSeconds);
 			fromNodeDirty = true;
 		}
 		if (deviceMetrics.ChannelUtilization > 0)
@@ -238,14 +238,14 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 		}
 	}
 
-	private static void ProcessTelemetry(Node fromNode, ref bool fromNodeDirty, ref string parsedPayload, Data data)
+	private static void ProcessTelemetry(Node fromNode, ref bool fromNodeDirty, ref string parsedPayload, Data data, DateTime now)
 	{
 		var telemetry = Telemetry.Parser.ParseFrom(data.Payload);
-		if (telemetry.DeviceMetrics != null) ProcessDeviceMetrics(fromNode, ref fromNodeDirty, ref parsedPayload, telemetry.DeviceMetrics);
+		if (telemetry.DeviceMetrics != null) ProcessDeviceMetrics(fromNode, ref fromNodeDirty, ref parsedPayload, telemetry.DeviceMetrics, now);
 		if (telemetry.EnvironmentMetrics != null) ProcessEnvironmentMetrics(ref parsedPayload, telemetry.EnvironmentMetrics);
 	}
 
-	private static void ProcessPosition(Node fromNode, ref bool fromNodePositionUpdated, ref string parsedPayload, Data data)
+	private static void ProcessPosition(Node fromNode, ref bool fromNodePositionUpdated, ref string parsedPayload, Data data, DateTime now)
 	{
 		var position = Position.Parser.ParseFrom(data.Payload);
 		if (fromNode.LastPositionPrecision > position.PrecisionBits && fromNode.HasRecentLocation) return;
@@ -254,7 +254,7 @@ internal class IngressWorker(ILogger logger, IServiceProvider serviceProvider, M
 		if (position.HasAltitude) fromNode.LastElevation = position.Altitude;
 		if (fromNode.LastLatitude.HasValue && fromNode.LastLongitude.HasValue)
 		{
-			fromNode.LastPositionUpdate = DateTime.Now;
+			fromNode.LastPositionUpdate = now;
 			fromNode.LastPositionPrecision = (int)position.PrecisionBits;
 			fromNodePositionUpdated = true;
 			parsedPayload = fromNode.Coordinates.ToString()!;

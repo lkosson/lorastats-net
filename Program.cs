@@ -19,6 +19,11 @@ builder.Services.AddRazorPages();
 builder.Services.AddSingleton<MeshCrypto>();
 builder.Services.AddHostedService<MQTTService>();
 builder.Services.AddScoped<MQTTWorker>();
+if (configuration.Liam)
+{
+	builder.Services.AddHostedService<LiamService>();
+	builder.Services.AddScoped<LiamWorker>();
+}
 
 var app = builder.Build();
 
