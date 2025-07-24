@@ -29,6 +29,11 @@ if (configuration.Multicast.IpToNodeMapping.Count > 0)
 	builder.Services.AddHostedService<MulticastService>();
 	builder.Services.AddScoped<MulticastWorker>();
 }
+if (configuration.DataRetentionHours > 0)
+{
+	builder.Services.AddHostedService<DBCleanupService>();
+	builder.Services.AddScoped<DBCleanupWorker>();
+}
 
 var app = builder.Build();
 

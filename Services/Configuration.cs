@@ -16,6 +16,7 @@ public class Configuration(IConfiguration configuration)
 	public MQTTs MQTTs => new MQTTs(configuration.GetSection("MQTT"));
 	public bool Liam => configuration.GetValue("Liam", false);
 	public Multicast Multicast => new Multicast(configuration.GetSection("Multicast"));
+	public int DataRetentionHours => configuration.GetValue<int>("DataRetentionHours", 24);
 }
 
 public class Channels(IConfiguration configuration)
