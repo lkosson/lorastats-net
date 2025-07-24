@@ -28,7 +28,7 @@ struct MapNode
 		extra = extra
 	};
 
-	public static string JsonForNode(Node node) => Formatter.FormatJSON(node);
+	public static string JsonForNode(Node node) => Formatter.FormatJSON(ForNode(node));
 	public static string JsonForNodes(IEnumerable<Node> nodes) => Formatter.FormatJSON(nodes.Select(node => ForNode(node)));
 	public static string JsonForNodes<TElement>(IEnumerable<TElement> elements, Func<TElement, Node> nodeSelector, Func<TElement, object> extraSelector)
 		=> Formatter.FormatJSON(elements.Select(element => ForNode(nodeSelector(element), extraSelector(element))));

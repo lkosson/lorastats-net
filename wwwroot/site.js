@@ -15,7 +15,7 @@ function buildNodeMarker() {
 }
 
 function buildNodePlate(node) {
-	return `<a class="node" href="${node.url}"><span style="background-color: ${node.backColor}; color: ${node.foreColor}">${node.shortName}</span>${node.longName}</a>`;
+	return `<a class="node" href="${node.url}"><span style="background-color: ${node.backColor}; color: ${node.foreColor}">${node.shortName}</span> ${node.longName}</a>`;
 }
 
 function buildNodeTooltip(node) {
