@@ -17,7 +17,7 @@ class CommunitiesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 
 	public async Task OnGetAsync()
 	{
-		Communities = await db.Communities.ToListAsync();
+		Communities = await db.Communities.OrderBy(community => community.Name).ToListAsync();
 
 		var areas = await db.CommunityAreas.Include(communityArea => communityArea.Community).ToListAsync();
 		var areasInfo = areas
