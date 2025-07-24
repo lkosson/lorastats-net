@@ -1,3 +1,6 @@
 ﻿User-agent: *
-Allow: /$
-Disallow: /
+Allow: /
+Disallow: /Node/
+Disallow: /Packet/
+Disallow: /Report/
+Disallow: /Error/
