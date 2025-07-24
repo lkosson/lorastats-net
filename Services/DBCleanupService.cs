@@ -4,7 +4,7 @@ internal class DBCleanupService(ILogger<DBCleanupService> logger, IServiceProvid
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
 		logger.LogInformation("DBCleanup service started");
-//		await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+		await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
