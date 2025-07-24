@@ -1,0 +1,46 @@
+﻿@page "/{Community}/Map"
+@using System.Globalization
+@model MapModel
+
+<div id="map"></div>
+
+@section Scripts
+{
+	<link rel="stylesheet" href="/leaflet/leaflet.css" />
+	<script src="/leaflet/leaflet.js"></script>
+	<script type="text/javascript">
+
+		var map = initMap('map');
+
+		const nodes = @Html.Raw(Model.Nodes);
+		const links = @Html.Raw(Formatter.FormatJSON(Model.Links.Select(link => new { fromNode = MapNode.ForNode(link.fromNode), toNode = MapNode.ForNode(link.toNode), link.color, link.traceroutes, link.reports, link.neighbors })));
+
+		addNodes(map, nodes);
+
+		var linksLayer = L.layerGroup().addTo(map);
+
+		function buildLinkStats(link) {
+			let linkStats = '';
+			if (link.traceroutes > 0) linkStats += `<tr><th>Traced routes</th><td>${link.traceroutes}</td></tr>`;
+			if (link.reports > 0) linkStats += `<tr><th>Direct reports</th><td>${link.reports}</td></tr>`;
+			if (link.neighbors > 0) linkStats += `<tr><th>Neighbors reports</th><td>${link.neighbors}</td></tr>`;
+			return linkStats;
+		}
+
+		for (const link of links) {
+
+			L.polyline([link.fromNode.coordinates, link.toNode.coordinates], { color: link.color })
+				.bindPopup(_ => `<table><caption>${buildNodePlate(link.fromNode)} - ${buildNodePlate(link.toNode)}</caption><tbody>${buildLinkStats(link)}</tbody></table>`, { maxWidth: 600 })
+				.bindTooltip(_ => `${buildNodePlate(link.fromNode)} - ${buildNodePlate(link.toNode)}`, { sticky: true })
+				.addTo(linksLayer);
+		}
+
+		let mapBounds = null;
+		for (const node of nodes) {
+			if (mapBounds == null) mapBounds = L.latLngBounds(node.coordinates, node.coordinates);
+			else mapBounds.extend(node.coordinates);
+		}
+
+		if (mapBounds) map.fitBounds(mapBounds);
+	</script>
+}
