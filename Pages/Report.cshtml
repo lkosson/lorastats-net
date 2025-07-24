@@ -1,0 +1,147 @@
+﻿@page "{id}"
+@using Microsoft.EntityFrameworkCore
+@model ReportModel
+@inject LoraStatsNet.Database.LoraStatsNetDb db
+
+<table>
+	<caption>Content of packet <a asp-page="Packet" asp-route-id="@Model.PacketReport.Packet.Ref.Id">@Model.PacketReport.Packet.PacketIdFmt</a></caption>
+	<tbody>
+		<tr>
+			<th>Header</th>
+			<td class="pre">@Model.HeaderData</td>
+		</tr>
+		<tr>
+			<th>Body</th>
+			<td class="pre">@Model.BodyData</td>
+		</tr>
+		<tr>
+			<th>Parsed payload</th>
+			<td class="pre">@Model.ParsedData</td>
+		</tr>
+	</tbody>
+</table>
+
+@if (Model.NeighborInfo != null)
+{
+	<table>
+		<caption>Neighbor nodes</caption>
+		<thead>
+			<tr>
+				<th>Node</th>
+				<th>SNR</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var neighbor in Model.NeighborInfo.Neighbors)
+			{
+				var node = await db.Nodes.FirstOrDefaultAsync(node => node.NodeId == neighbor.NodeId);
+				<tr>
+					<td><vc:node value="@node"></vc:node></td>
+					<td>@Formatter.FormatSNR(neighbor.Snr)</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@if (Model.Position != null)
+{
+	<table>
+		<caption>Node position</caption>
+		<tbody>
+			<tr>
+				<th>Latitude</th>
+				<td>@Math.Round(Model.Position.LatitudeI * 1e-7, 7)</td>
+			</tr>
+			<tr>
+				<th>Longitude</th>
+				<td>@Math.Round(Model.Position.LongitudeI * 1e-7, 7)</td>
+			</tr>
+			<tr>
+				<th>Altitude</th>
+				<td>@Model.Position.Altitude m</td>
+			</tr>
+			<tr>
+				<th>Time</th>
+				<td>@(new DateTime(1970, 1, 1).AddSeconds(Model.Position.Time).ToString("yyyy-MM-dd HH:mm:ss"))</td>
+			</tr>
+		</tbody>
+	</table>
+}
+
+@if (Model.RouteDiscovery != null)
+{
+	<table>
+		<caption>Route</caption>
+		<thead>
+			<tr>
+				<th>Node</th>
+				<th>SNR</th>
+				<th>Distance</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (Model.PacketReport.Packet.RequestId == 0)
+			{
+				<tr>
+					<td><vc:node value="@Model.PacketReport.Packet.FromNode"></vc:node></td>
+					<td></td>
+					<td></td>
+				</tr>
+
+				@for (int i = 0; i < Model.RouteDiscovery.Route.Count; i++)
+				{
+					var node = await db.Nodes.FirstOrDefaultAsync(node => node.NodeId == Model.RouteDiscovery.Route[i]);
+					<tr>
+						<td><vc:node value="@node"></vc:node></td>
+						<td>@Formatter.FormatSNR(Model.RouteDiscovery.SnrTowards[i])</td>
+						<td>@Formatter.FormatDistance(node?.DistanceTo(Model.PacketReport.Packet.FromNode))</td>
+					</tr>
+				}
+
+				@if (Model.RouteDiscovery.Route.Count == Model.RouteDiscovery.SnrTowards.Count - 1)
+				{
+					<tr>
+						<td><vc:node value="@Model.PacketReport.Packet.ToNode"></vc:node></td>
+						<td>@Formatter.FormatSNR(Model.RouteDiscovery.SnrTowards.Last())</td>
+						<td>@Formatter.FormatDistance(Model.PacketReport.Packet.ToNode.DistanceTo(Model.PacketReport.Packet.FromNode))</td>
+					</tr>
+				}
+			}
+			else
+			{
+				<tr>
+					<td><vc:node value="@Model.PacketReport.Packet.ToNode"></vc:node></td>
+					<td></td>
+					<td></td>
+				</tr>
+
+				@for (int i = 0; i < Model.RouteDiscovery.Route.Count; i++)
+				{
+					var node = await db.Nodes.FirstOrDefaultAsync(node => node.NodeId == Model.RouteDiscovery.Route[i]);
+					<tr>
+						<td><vc:node value="@node"></vc:node></td>
+						<td>@Formatter.FormatSNR(Model.RouteDiscovery.SnrTowards[i])</td>
+						<td>@Formatter.FormatDistance(node?.DistanceTo(Model.PacketReport.Packet.ToNode))</td>
+					</tr>
+				}
+
+				<tr>
+					<td><vc:node value="@Model.PacketReport.Packet.FromNode"></vc:node></td>
+					<td>@Formatter.FormatSNR(Model.RouteDiscovery.SnrTowards.Last())</td>
+					<td>@Formatter.FormatDistance(Model.PacketReport.Packet.FromNode.DistanceTo(Model.PacketReport.Packet.ToNode))</td>
+				</tr>
+
+				@for (int i = 0; i < Model.RouteDiscovery.RouteBack.Count; i++)
+				{
+					var node = await db.Nodes.FirstOrDefaultAsync(node => node.NodeId == Model.RouteDiscovery.RouteBack[i]);
+					<tr>
+						<td><vc:node value="@node"></vc:node></td>
+						<td>@Formatter.FormatSNR(Model.RouteDiscovery.SnrBack[i])</td>
+						<td>@Formatter.FormatDistance(node?.DistanceTo(Model.PacketReport.Packet.ToNode))</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+}

@@ -26,7 +26,7 @@ class PacketModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 			.FirstOrDefaultAsync(packet => packet.Ref == PacketRef);
 		if (packet == null) return NotFound();
 		MapNode.Ungroup(packet.Reports.Select(report => report.Gateway).Distinct());
-		RouteData.Values["community"] = packet.FromNode.Community;
+		RouteData.Values["community"] = packet.FromNode.Community?.UrlName;
 		Packet = packet;
 		return Page();
 	}

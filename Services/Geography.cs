@@ -17,8 +17,10 @@ static class Geography
 		return Math.Round(d, 3);
 	}
 
-	public static double? DistanceTo(this Node node1, Node node2)
+	public static double? DistanceTo(this Node? node1, Node? node2)
 	{
+		if (node1 == null) return null;
+		if (node2 == null) return null;
 		if (!node1.HasValidLocation) return null;
 		if (!node2.HasValidLocation) return null;
 		return Distance(node1.Coordinates!.Value, node2.Coordinates!.Value);
