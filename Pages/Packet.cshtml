@@ -1,0 +1,149 @@
+﻿@page "{id}"
+@model PacketModel
+
+<h1>
+	Packet
+	<strong>@Model.Packet.PacketIdFmt</strong>
+</h1>
+
+<table>
+	<caption>Header</caption>
+	<tbody>
+		<tr>
+			<th>From node</th>
+			<td><vc:node value="@Model.Packet.FromNode"></vc:node></td>
+		</tr>
+		@if (Model.Packet.ToNode != null)
+		{
+			<tr>
+				<th>To node</th>
+				<td><vc:node value="@Model.Packet.ToNode"></vc:node></td>
+			</tr>
+		}
+		<tr>
+			<th>Sent at</th>
+			<td><vc:abs-time value=Model.Packet.FirstSeen></vc:abs-time></td>
+		</tr>
+		<tr>
+			<th>Port</th>
+			<td class="pre">@Model.Packet.Port</td>
+		</tr>
+		<tr>
+			<th>HopStart</th>
+			<td>@Model.Packet.HopStart</td>
+		</tr>
+		<tr>
+			<th>WantAck</th>
+			<td>@(Model.Packet.WantAck ? 1 : 0)</td>
+		</tr>
+		<tr>
+			<th>WantResponse</th>
+			<td>@(Model.Packet.WantResponse ? 1 : 0)</td>
+		</tr>
+		<tr>
+			<th>BitField</th>
+			<td class="pre">@Model.Packet.BitFieldFmt</td>
+		</tr>
+		<tr>
+			<th>Channel</th>
+			<td class="pre"><vc:channel value="@Model.Packet.Channel"></vc:channel></td>
+		</tr>
+		<tr>
+			<th>Request ID</th>
+			<td class="pre">@Model.Packet.RequestIdFmt</td>
+		</tr>
+	</tbody>
+</table>
+
+@if (Model.Packet.FromNode.HasValidLocation || Model.Packet.Reports.Any(e => e.Gateway.HasValidLocation))
+{
+	<div id="minimap"></div>
+}
+
+<table>
+	<caption>Reports</caption>
+	<thead>
+		<tr>
+			<th>Time</th>
+			<th>Gateway</th>
+			@if (Model.Packet.FromNode.LastPositionUpdate.HasValue)
+			{
+				<th>Distance</th>
+			}
+			<th>RSSI</th>
+			<th>SNR</th>
+			<th>HopLimit</th>
+			<th>RelayNode</th>
+			<th>NextHop</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var report in Model.Packet.Reports)
+		{
+			<tr>
+				<td class="num"><a asp-page="Report" asp-route-id="@report.Ref.Id">@report.ReceptionTime.ToString("yyyy-MM-dd HH:mm:ss")</a></td>
+				<td><vc:node value="@report.Gateway"></vc:node></td>
+				@if (Model.Packet.FromNode.LastPositionUpdate.HasValue)
+				{
+					<td class="num">@Formatter.FormatDistance(report.Gateway.DistanceTo(Model.Packet.FromNode))</td>
+				}
+				<td class="num">@Formatter.FormatRSSI(report.RSSI)</td>
+				<td class="num">@Formatter.FormatSNR(report.SNR)</td>
+				<td class="num">@report.HopLimit</td>
+				<td class="num">@report.RelayNode</td>
+				<td class="num">@report.NextHop</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+@section Scripts
+{
+	@if (Model.Packet.FromNode.HasValidLocation || Model.Packet.Reports.Any(e => e.Gateway.HasValidLocation))
+	{
+		<link rel="stylesheet" href="/leaflet/leaflet.css" />
+		<script src="/leaflet/leaflet.js"></script>
+		<script type="text/javascript">
+
+			const otherNodes = @Html.Raw(MapNode.JsonForNodes(Model.Packet.Reports.Where(report => report.Gateway.HasValidLocation), report => report.Gateway, report => new { color = ColorPalette.Value(report.Packet.HopStart - report.HopLimit, 7), hops = report.Packet.HopStart - report.HopLimit }));
+
+			var map = initMap('minimap');
+
+			@if (Model.Packet.FromNode.HasValidLocation)
+			{
+				<text>
+					const nodeCoords = @Formatter.FormatJSONCoordinates(Model.Packet.FromNode.Coordinates!.Value);
+					L.marker(nodeCoords).addTo(map);
+				</text>
+			}
+			else
+			{
+				var avgLat = Model.Packet.Reports.Where(e => e.Gateway.HasValidLocation).Average(e => e.Gateway.LastLatitude)!.Value;
+				var avgLon = Model.Packet.Reports.Where(e => e.Gateway.HasValidLocation).Average(e => e.Gateway.LastLongitude)!.Value;
+				<text>
+					const nodeCoords = @Formatter.FormatJSONCoordinates(new Coordinates(avgLat, avgLon));
+				</text>
+			}
+
+			const nodeIcon = buildNodeMarker();
+			const nodeGroup = L.layerGroup().addTo(map);
+			let mapBounds = null;
+			for (const otherNode of otherNodes) {
+				if (otherNode.coordinates == null) continue;
+
+				if (mapBounds == null) mapBounds = L.latLngBounds(nodeCoords, otherNode.coordinates);
+				else mapBounds.extend(otherNode.coordinates);
+
+				const marker = L.marker(otherNode.coordinates, { icon: nodeIcon })
+					.bindPopup(_ => buildNodePopup(otherNode))
+					.bindTooltip(_ => buildNodeTooltip(otherNode));
+				nodeGroup.addLayer(marker);
+
+				L.polyline([nodeCoords, otherNode.coordinates], { color: otherNode.extra.color })
+					.bindTooltip(_ => buildNodeTooltip(otherNode) + ` ${otherNode.extra.hops} hops`, { sticky: true })
+					.addTo(map);
+			}
+			if (mapBounds) map.fitBounds(mapBounds);
+		</script>
+	}
+}
