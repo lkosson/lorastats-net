@@ -67,6 +67,7 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 		NodeActivity = packetsByNodeHour;
 
 		ActiveNodes = nodes
+			.Where(node => packetsByNodeHour.ContainsKey(node))
 			.OrderByDescending(node => node.LastSeen)
 			.Select((e, i) => (nr: i + 1, node: e))
 			.ToList();
@@ -77,6 +78,7 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 			.Select((node, i) => (nr: i + 1, node))
 			.ToList();
 		SpammingNodes = nodes
+			.Where(node => packetsByNodeHour.ContainsKey(node))
 			.Select(node => (node, packets: packetsByNode[node]))
 			.OrderByDescending(e => e.packets.Count())
 			.Select((e, i) => (
