@@ -4,6 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<PublishDir>_publish</PublishDir>
 	</PropertyGroup>
 
 	<Target Name="GenerateVersionCs" BeforeTargets="BeforeBuild;BeforeRebuild">

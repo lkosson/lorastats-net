@@ -5,3 +5,6 @@
 *.user
 Properties/launchSettings.json
 GeneratedVersion.cs
+/scripts/build.bat
+/scripts/update
+/_out
