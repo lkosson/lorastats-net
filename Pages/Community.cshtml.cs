@@ -21,8 +21,9 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		if (!User?.Identity?.IsAuthenticated ?? false) return Unauthorized();
 		var community = CommunityRef.IsNull ? new Community { Name = "", UrlName = "" } : await db.GetAsync(CommunityRef);
 		if (community is null) return NotFound();
-		var nodes = await db.Nodes.Where(node => node.LastLatitude.HasValue && node.LastLongitude.HasValue).ToListAsync();
 		Community = community;
+		var nodes = await db.Nodes.Where(node => node.LastLatitude.HasValue && node.LastLongitude.HasValue).ToListAsync();
+		MapNode.Ungroup(nodes);
 		Nodes = MapNode.JsonForNodes(nodes);
 		var areas = await db.CommunityAreas.Where(communityArea => communityArea.CommunityId == CommunityRef).ToListAsync();
 		Areas = JsonSerializer.Serialize(areas.Select(communityArea => communityArea.Area.ForMap));
@@ -78,6 +79,7 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		{
 			if (!node.HasValidLocation) continue;
 
+			var isAssigned = false;
 			foreach (var area in communityAreas)
 			{
 				if (!area.Area.IsInside(node.Coordinates!.Value)) continue;
@@ -86,8 +88,15 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 					node.CommunityId = area.CommunityId;
 					await db.StoreAsync(node);
 				}
+				isAssigned = true;
 				communityByNode[node] = area.CommunityId;
 				break;
+			}
+
+			if (!isAssigned && node.CommunityId.HasValue)
+			{
+				node.CommunityId = default;
+				await db.StoreAsync(node);
 			}
 		}
 		var reportedNodes = await db.PacketReports
@@ -99,7 +108,15 @@ class CommunityModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		foreach (var entry in reportedNodes)
 		{
 			if (entry.FromNode.HasValidLocation) continue;
-			if (!communityByNode.TryGetValue(entry.GatewayId, out var communityRef)) continue;
+			if (!communityByNode.TryGetValue(entry.GatewayId, out var communityRef))
+			{
+				if (entry.FromNode.CommunityId.HasValue)
+				{
+					entry.FromNode.CommunityId = default;
+					await db.StoreAsync(entry.FromNode);
+				}
+				continue;
+			}
 			if (entry.FromNode.CommunityId == communityRef) continue;
 			entry.FromNode.CommunityId = communityRef;
 			await db.StoreAsync(entry.FromNode);
