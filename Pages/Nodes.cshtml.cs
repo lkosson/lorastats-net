@@ -36,16 +36,15 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 
 		var reports = await db.PacketReports
 			.Include(report => report.Packet)
-			.ThenInclude(packet => packet.FromNode)
 			.Where(report => report.Packet.FromNode.CommunityId == Community && report.ReceptionTime >= DateTime.Now.AddHours(-HistoryHours))
+			.Select(report => new { report.PacketId, report.Packet.Port, report.Packet.FirstSeen, report.Packet.FromNodeId, report.GatewayId, report.ReceptionTime })
 			.ToListAsync();
-		var packets = reports.Select(report => report.Packet).Distinct().ToList();
-		var nodes = packets.Select(packet => packet.FromNode).Distinct().ToList();
+		var packets = reports.Select(report => new { report.Port, report.FirstSeen, report.FromNodeId }).Distinct().ToList();
+		var nodes = await db.Nodes.Where(node => node.CommunityId == Community && node.LastSeen >= DateTime.Now.AddHours(-HistoryHours)).ToListAsync();
 		if (Enum.TryParse<Config.Types.DeviceConfig.Types.Role>(RoleName, out var role)) nodes = nodes.Where(e => e.Role == role).ToList();
 
 		var nodesByRef = nodes.ToDictionary(node => node.Ref);
-		var activeNodeRefs = packets.Select(packet => packet.FromNode).ToHashSet();
-		var packetsByNode = packets.ToLookup(packet => packet.FromNode, packet => packet.Port);
+		var packetsByNode = packets.ToLookup(packet => packet.FromNodeId, packet => packet.Port);
 		var packetsByNodeHour = new Dictionary<EntityRef<Node>, int[]>();
 
 		BucketHours = Enumerable.Range(0, ActivityBuckets)
@@ -56,10 +55,10 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 
 		foreach (var packet in packets)
 		{
-			if (!packetsByNodeHour.TryGetValue(packet.FromNode, out var stats))
+			if (!packetsByNodeHour.TryGetValue(packet.FromNodeId, out var stats))
 			{
 				stats = new int[ActivityBuckets];
-				packetsByNodeHour[packet.FromNode] = stats;
+				packetsByNodeHour[packet.FromNodeId] = stats;
 			}
 			var bucket = (int)((DateTime.Now - packet.FirstSeen).TotalHours / HoursPerBucket);
 			if (bucket >= stats.Length) continue;
@@ -68,7 +67,6 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 		NodeActivity = packetsByNodeHour;
 
 		ActiveNodes = nodes
-			.Where(activeNodeRefs.Contains)
 			.OrderByDescending(node => node.LastSeen)
 			.Select((e, i) => (nr: i + 1, node: e))
 			.ToList();
@@ -79,7 +77,6 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 			.Select((node, i) => (nr: i + 1, node))
 			.ToList();
 		SpammingNodes = nodes
-			.Where(activeNodeRefs.Contains)
 			.Select(node => (node, packets: packetsByNode[node]))
 			.OrderByDescending(e => e.packets.Count())
 			.Select((e, i) => (
@@ -101,7 +98,7 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 			.Select(gateway => (
 				node: nodesByRef.GetValueOrDefault(gateway.Key)!,
 				lastReception: gateway.Max(report => report.ReceptionTime),
-				packetCount: gateway.Select(report => report.Packet).Distinct().Count()))
+				packetCount: gateway.Select(report => report.PacketId).Distinct().Count()))
 			.Where(e => e.node != null)
 			.OrderByDescending(e => e.packetCount)
 			.Where(e => e.node != null)
