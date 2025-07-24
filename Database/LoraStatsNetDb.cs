@@ -1,4 +1,5 @@
-﻿using LoraStatsNet.Database.Entities;
+﻿using System.Data.Common;
+using LoraStatsNet.Database.Entities;
 using LoraStatsNet.Database.Model;
 using LoraStatsNet.Services;
 using Microsoft.Data.Sqlite;
@@ -33,9 +34,22 @@ class LoraStatsNetDb : DbContext
 		base.OnConfiguring(optionsBuilder);
 		optionsBuilder.UseSqlite($"Data Source={configuration.DbPath}");
 		optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.SensitiveDataLoggingEnabledWarning));
-		optionsBuilder.LogTo(message => logger.LogDebug("Executing command: {query}", message), [RelationalEventId.CommandExecuting]);
+		optionsBuilder.LogTo((evt, level) => evt == RelationalEventId.CommandExecuting || evt == RelationalEventId.CommandExecuted || level >= LogLevel.Warning, LogCommand);
 		optionsBuilder.EnableSensitiveDataLogging();
 		optionsBuilder.ReplaceService<IRelationalAnnotationProvider, FixedSqliteAnnotationProvider>();
+	}
+
+	private void LogCommand(EventData eventData)
+	{
+		if (eventData.EventId == RelationalEventId.CommandExecuting && eventData is CommandEventData ced)
+		{
+			logger.LogInformation(ced.CommandId.GetHashCode(), "Executing command\n{command}", ced.Command.CommandText);
+			if (ced.Command.Parameters.Count > 0) logger.LogTrace(ced.CommandId.GetHashCode(), "Command parameters:\n{parameters}", String.Join("\n", ced.Command.Parameters.Cast<DbParameter>().Select(p => p.ParameterName + "='" + p.Value + "'")));
+		}
+		else if (eventData.EventId == RelationalEventId.CommandExecuted && eventData is CommandExecutedEventData ceed) logger.LogDebug(ceed.CommandId.GetHashCode(), "Command executed in {time} ms", ceed.Duration.TotalMilliseconds);
+		else if (eventData.EventId == RelationalEventId.CommandError && eventData is CommandErrorEventData cerd && cerd.Exception != null) logger.LogError(cerd.CommandId.GetHashCode(), "Command execution error: {exc}", cerd.Exception);
+		else if (eventData.LogLevel == LogLevel.Warning) logger.LogWarning("{warning}", eventData.ToString());
+		else if (eventData.LogLevel == LogLevel.Error) logger.LogError("{error}", eventData.ToString());
 	}
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
