@@ -30,6 +30,7 @@ function addNodes(map, nodes) {
 	const nodeIcon = buildNodeMarker();
 	const nodeGroup = L.layerGroup().addTo(map);
 	for (const node of nodes) {
+		if (node.coordinates == null) continue;
 		const marker = L.marker(node.coordinates, { icon: nodeIcon })
 			.bindPopup(_ => buildNodePopup(node))
 			.bindTooltip(_ => buildNodeTooltip(node));

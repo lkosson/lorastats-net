@@ -1,11 +1,9 @@
-using System.Text.Json;
 using LoraStatsNet.Database;
 using LoraStatsNet.Database.Entities;
 using Meshtastic.Protobufs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using static Meshtastic.Protobufs.Channel.Types;
 
 namespace LoraStatsNet.Pages;
 
