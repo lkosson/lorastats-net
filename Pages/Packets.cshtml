@@ -2,7 +2,7 @@
 @using System.Globalization
 @model PacketsModel
 
-<vc:packets packets="Model.LastPackets" title="Last packets"></vc:packets>
+<vc:packets packets="Model.LastPackets" title="@($"Last packets in {Model.Community}")"></vc:packets>
 
 @if (Model.PacketsByType.Count > 1)
 {
