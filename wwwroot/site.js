@@ -26,8 +26,8 @@ function buildNodePopup(node) {
 	return `<table><caption>${buildNodePlate(node)}</caption><tbody><tr><th>Last seen:</th><td>${node.lastSeen}</td></tr><tr><th>Last position update:</th><td>${node.lastPositionUpdate}</td></tr></tbody></table>`;
 }
 
-function addNodes(map, nodes) {
-	const nodeIcon = buildNodeMarker();
+function addNodes(map, nodes, marker = null) {
+	const nodeIcon = marker ?? buildNodeMarker();
 	const nodeGroup = L.layerGroup().addTo(map);
 	for (const node of nodes) {
 		if (node.coordinates == null) continue;
