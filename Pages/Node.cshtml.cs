@@ -57,10 +57,12 @@ class NodeModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 			.Where(packet => packet.FromNodeId == node)
 			.OrderByDescending(packet => packet.FirstSeen)
 			.ToList();
+
 		PacketsReceived = packets
 			.Where(packet => packet.ToNodeId == node)
 			.OrderByDescending(packet => packet.FirstSeen)
 			.ToList();
+
 		NodesReached = reports
 			.Where(report => report.Packet.FromNodeId == node)
 			.GroupBy(report => report.Gateway)
@@ -98,6 +100,9 @@ class NodeModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 			.ThenBy(e => e.snr)
 			.ThenBy(e => e.node.Ref.Id)
 			.ToList();
+
+		MapNode.Ungroup(NodesReached.Select(e => e.node));
+
 		return Page();
 	}
 }

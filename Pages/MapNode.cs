@@ -28,8 +28,20 @@ struct MapNode
 		extra = extra
 	};
 
-	public static string JsonForNode(Node node) => JsonSerializer.Serialize(node);
-	public static string JsonForNodes(IEnumerable<Node> nodes) => JsonSerializer.Serialize(nodes.Select(node => ForNode(node)));
+	public static string JsonForNode(Node node) => Formatter.FormatJSON(node);
+	public static string JsonForNodes(IEnumerable<Node> nodes) => Formatter.FormatJSON(nodes.Select(node => ForNode(node)));
 	public static string JsonForNodes<TElement>(IEnumerable<TElement> elements, Func<TElement, Node> nodeSelector, Func<TElement, object> extraSelector)
-		=> JsonSerializer.Serialize(elements.Select(element => ForNode(nodeSelector(element), extraSelector(element))));
+		=> Formatter.FormatJSON(elements.Select(element => ForNode(nodeSelector(element), extraSelector(element))));
+
+	public static void Ungroup(IEnumerable<Node> nodes)
+	{
+		var nodeGroups = nodes
+			.Where(node => node.HasValidLocation)
+			.GroupBy(node => (node.LastLatitude, node.LastLongitude))
+			.Where(g => g.Count() > 1)
+			.SelectMany(g => g.Select((node, i) => (node, i)));
+
+		foreach (var (node, i) in nodeGroups)
+			node.LastLongitude += i * 0.0002;
+	}
 }

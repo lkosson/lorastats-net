@@ -31,6 +31,7 @@ class CommunitiesModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 		Areas = JsonSerializer.Serialize(areasInfo);
 
 		var nodes = await db.Nodes.Where(node => node.LastLatitude.HasValue && node.LastLongitude.HasValue).ToListAsync();
+		MapNode.Ungroup(nodes);
 		Nodes = MapNode.JsonForNodes(nodes);
 		NodeCount = nodes.Where(node => node.CommunityId.HasValue).GroupBy(node => node.CommunityId!.Value).ToDictionary(g => g.Key, g => g.Count());
 	}
