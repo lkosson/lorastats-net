@@ -34,12 +34,15 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 		if (community == null) return NotFound();
 		Community = community;
 
-		var reports = await db.PacketReports
-			.Include(report => report.Packet)
-			.Where(report => report.Packet.FromNode.CommunityId == Community && report.ReceptionTime >= DateTime.Now.AddHours(-HistoryHours))
-			.Select(report => new { report.PacketId, report.Packet.Port, report.Packet.FirstSeen, report.Packet.FromNodeId, report.GatewayId, report.ReceptionTime })
+		var gatewayStats = await db.PacketReports
+			.Where(report => report.Gateway.CommunityId == Community && report.ReceptionTime >= DateTime.Now.AddHours(-HistoryHours))
+			.GroupBy(report => report.GatewayId)
+			.Select(g => new { Gateway = g.Key, LastReport = g.Max(report => report.ReceptionTime), PacketCount = g.Count() })
 			.ToListAsync();
-		var packets = reports.Select(report => new { report.Port, report.FirstSeen, report.FromNodeId }).Distinct().ToList();
+		var packets = await db.Packets
+			.Where(packet => packet.FromNode.CommunityId == Community && packet.FirstSeen >= DateTime.Now.AddHours(-HistoryHours))
+			.Select(packet => new { packet.FromNodeId, packet.Port, packet.FirstSeen })
+			.ToListAsync();
 		var nodes = await db.Nodes.Where(node => node.CommunityId == Community && node.LastSeen >= DateTime.Now.AddHours(-HistoryHours)).ToListAsync();
 		if (Enum.TryParse<Config.Types.DeviceConfig.Types.Role>(RoleName, out var role)) nodes = nodes.Where(e => e.Role == role).ToList();
 
@@ -95,12 +98,11 @@ class NodesModel(LoraStatsNetDb db, Configuration configuration) : PageModel, IP
 			.Take(25)
 			.ToList();
 		TotalPackets = packets.Count;
-		ActiveGateways = reports
-			.GroupBy(report => report.GatewayId)
+		ActiveGateways = gatewayStats
 			.Select(gateway => (
-				node: nodesByRef.GetValueOrDefault(gateway.Key)!,
-				lastReception: gateway.Max(report => report.ReceptionTime),
-				packetCount: gateway.Select(report => report.PacketId).Distinct().Count()))
+				node: nodesByRef.GetValueOrDefault(gateway.Gateway)!,
+				lastReception: gateway.LastReport,
+				packetCount: gateway.PacketCount))
 			.Where(e => e.node != null)
 			.OrderByDescending(e => e.packetCount)
 			.Where(e => e.node != null)
