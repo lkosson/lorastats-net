@@ -31,7 +31,7 @@
 	const map = initMap('minimap');
 	const nodes = @Html.Raw(Model.Nodes);
 
-	addNodes(map, nodes);
+	addNodes(map, nodes, L.divIcon({ className: 'map-node', iconSize: [3, 3] }));
 
 	const areasElement = document.getElementById('Areas');
 	let newArea = null;
