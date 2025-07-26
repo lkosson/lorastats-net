@@ -18,6 +18,7 @@ class PacketModel(LoraStatsNetDb db) : PageModel, IPageWithTitle
 	{
 		if (PacketRef.IsNull) return BadRequest();
 		var packet = await db.Packets
+			.AsSplitQuery()
 			.Include(packet => packet.Reports)
 			.ThenInclude(report => report.Gateway)
 			.Include(packet => packet.FromNode)
