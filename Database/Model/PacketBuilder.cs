@@ -27,5 +27,7 @@ static class PacketBuilder
 
 		builder.HasOne(e => e.FromNode).WithMany(e => e.SentPackets).HasForeignKey(e => e.FromNodeId).OnDelete(DeleteBehavior.Cascade);
 		builder.HasOne(e => e.ToNode).WithMany().HasForeignKey(e => e.ToNodeId).OnDelete(DeleteBehavior.Cascade);
+
+		builder.HasIndex(e => new { e.FromNodeId, e.FirstSeen, e.Port });
 	}
 }

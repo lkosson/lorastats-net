@@ -24,5 +24,7 @@ static class PacketReportBuilder
 		builder.HasOne(e => e.Packet).WithMany(e => e.Reports).HasForeignKey(e => e.PacketId).OnDelete(DeleteBehavior.Cascade);
 		builder.HasOne(e => e.Gateway).WithMany(e => e.ReportedPackets).HasForeignKey(e => e.GatewayId).OnDelete(DeleteBehavior.Cascade);
 		builder.HasOne(e => e.Data).WithOne(e => e.PacketReport).HasForeignKey<PacketData>(e => e.PacketReportId).OnDelete(DeleteBehavior.Cascade);
+
+		builder.HasIndex(e => new { e.GatewayId, e.ReceptionTime });
 	}
 }
